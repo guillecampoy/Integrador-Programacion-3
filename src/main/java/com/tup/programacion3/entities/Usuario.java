@@ -4,36 +4,48 @@ import com.tup.programacion3.enums.Rol;
 
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 public class Usuario extends Base{
     private String nombre;
     private String apellido;
     private String mail;
     private String celular;
-    private String password;
+    private String contraseña;
     private Rol rol;
-    private HashSet<Pedido> pedidos;
-    public Usuario() {}
+    private Set<Pedido> pedidos;
 
-    public Usuario(String nombre, String apellido, String mail, String celular, String password, Rol rol) {
+    public Usuario() {
+        this.pedidos = new HashSet<>();
+    }
+
+    public Usuario(String nombre, String apellido, String mail, String celular, String contraseña, Rol rol) {
         this.nombre = nombre;
         this.apellido = apellido;
         this.mail = mail;
         this.celular = celular;
-        this.password = password;
+        this.contraseña = contraseña;
         this.rol = rol;
         this.pedidos = new HashSet<>();
+    }
+
+    public void addPedido(Pedido pedido) {
+        this.pedidos.add(pedido);
+    }
+
+    public Set<Pedido> getPedidos() {
+        return pedidos;
     }
 
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof Usuario usuario)) return false;
-        return Objects.equals(nombre, usuario.nombre) && Objects.equals(apellido, usuario.apellido) && Objects.equals(mail, usuario.mail) && Objects.equals(celular, usuario.celular) && Objects.equals(password, usuario.password) && rol == usuario.rol && Objects.equals(pedidos, usuario.pedidos);
+        return Objects.equals(mail, usuario.mail);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(nombre, apellido, mail, celular, password, rol, pedidos);
+        return Objects.hash(mail);
     }
 
     @Override
@@ -43,9 +55,9 @@ public class Usuario extends Base{
                 ", apellido='" + apellido + '\'' +
                 ", mail='" + mail + '\'' +
                 ", celular='" + celular + '\'' +
-                ", password='" + password + '\'' +
+                ", contraseña='" + contraseña + '\'' +
                 ", rol=" + rol +
-                ", pedidos=" + pedidos +
+                ", pedidos=" + pedidos.size() +
                 '}';
     }
 }

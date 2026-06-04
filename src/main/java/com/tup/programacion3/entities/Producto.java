@@ -19,6 +19,9 @@ public class Producto extends Base {
         this.imagen = imagen;
         this.disponible = disponible;
         this.categoria = categoria;
+        if (categoria != null) {
+            categoria.addProducto(this);
+        }
     }
 
     public Producto(String nombre, double precio, String descripcion, int stock, String imagen, Boolean disponible) {
@@ -28,6 +31,10 @@ public class Producto extends Base {
         this.stock = stock;
         this.imagen = imagen;
         this.disponible = disponible;
+    }
+
+    public double getPrecio() {
+        return precio;
     }
 
     @Override
