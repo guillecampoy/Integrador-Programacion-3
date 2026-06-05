@@ -11,7 +11,7 @@ public class Usuario extends Base{
     private String apellido;
     private String mail;
     private String celular;
-    private String contraseña;
+    private String contrasenia;
     private Rol rol;
     private Set<Pedido> pedidos;
 
@@ -19,12 +19,12 @@ public class Usuario extends Base{
         this.pedidos = new HashSet<>();
     }
 
-    public Usuario(String nombre, String apellido, String mail, String celular, String contraseña, Rol rol) {
+    public Usuario(String nombre, String apellido, String mail, String celular, String contrasenia, Rol rol) {
         this.nombre = nombre;
         this.apellido = apellido;
         this.mail = mail;
         this.celular = celular;
-        this.contraseña = contraseña;
+        this.contrasenia = contrasenia;
         this.rol = rol;
         this.pedidos = new HashSet<>();
     }
@@ -48,6 +48,10 @@ public class Usuario extends Base{
         return Objects.hash(mail);
     }
 
+    /** A modo comentario sin ser tan estricto sobre políticas de PII
+     * se omite sólo el imprimir la contraseña
+     * en un entorno productivo se debería ofuscar correo y teléfono
+    **/
     @Override
     public String toString() {
         return "Usuario{" +
@@ -55,7 +59,6 @@ public class Usuario extends Base{
                 ", apellido='" + apellido + '\'' +
                 ", mail='" + mail + '\'' +
                 ", celular='" + celular + '\'' +
-                ", contraseña='" + contraseña + '\'' +
                 ", rol=" + rol +
                 ", pedidos=" + pedidos.size() +
                 '}';
