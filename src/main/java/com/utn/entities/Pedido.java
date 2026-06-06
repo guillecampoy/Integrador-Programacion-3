@@ -1,25 +1,44 @@
-package com.tup.programacion3.entities;
+package com.utn.entities;
 
-import com.tup.programacion3.enums.Estado;
-import com.tup.programacion3.enums.FormaPago;
+import com.utn.enums.Estado;
+import com.utn.enums.FormaPago;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@SuperBuilder
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
+@ToString
 public class Pedido extends Base implements Calculable {
+    @EqualsAndHashCode.Include
     private LocalDate fecha;
+    @EqualsAndHashCode.Include
     private Estado estado;
-    private Double total;
+    @Builder.Default
+    private Double total = 0.0;
+    @EqualsAndHashCode.Include
     private FormaPago formaPago;
+    @ToString.Exclude
     private Usuario usuario;
-    private Set<DetallePedido> detallePedidos;
+    @Builder.Default
+    private Set<DetallePedido> detallePedidos = new HashSet<>();
 
 
 
     public void addDetallePedido(int cantidad, Producto producto) {
-        DetallePedido detallePedido = new DetallePedido(producto, cantidad);
+        DetallePedido detallePedido = DetallePedido.builder()
+                .producto(producto)
+                .cantidad(cantidad)
+                .subtotal(producto.getPrecio() * cantidad)
+                .build();
         this.detallePedidos.add(detallePedido);
         calcularTotal();
     }
@@ -67,28 +86,5 @@ public class Pedido extends Base implements Calculable {
         this.total = detallePedidos.stream()
                 .mapToDouble(DetallePedido::getSubtotal)
                 .sum();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof Pedido pedido)) return false;
-        return Objects.equals(fecha, pedido.fecha) && estado == pedido.estado && formaPago == pedido.formaPago && Objects.equals(usuario, pedido.usuario);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(fecha, estado, formaPago, usuario);
-    }
-
-    @Override
-    public String toString() {
-        return "Pedido{" +
-                "fecha=" + fecha +
-                ", estado=" + estado +
-                ", total=" + total +
-                ", formaPago=" + formaPago +
-                ", usuario=" + usuario +
-                ", detallePedidos=" + detallePedidos +
-                '}';
     }
 }

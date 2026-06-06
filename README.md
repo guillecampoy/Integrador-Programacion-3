@@ -1,24 +1,32 @@
-# TP ToString - Colecciones
+# TP Lombok - DTO
 
-Trabajo practico de Programacion III sobre modelado de objetos, colecciones `Set` y sobrescritura de metodos en Java.
+Trabajo practico de Programacion III sobre modelado de objetos, uso de Lombok para reducir codigo repetitivo y creacion de DTOs para ocultar informacion sensible.
 
 ## Objetivo
 
-Desarrollar y procesar colecciones de objetos en Java, implementando `toString()` para mostrar los datos de forma clara por consola.
+Configurar el proyecto con Gradle, incorporar Lombok y crear DTOs con `record` para transferir informacion sin exponer datos sensibles.
 
 ## Consigna
 
-A partir del UML incluido en [docs/PROGRAMACION III ToString-Colecciones.pdf](docs/PROGRAMACI%C3%93N%20III%20ToString-Colecciones.pdf), se deben implementar las clases y relaciones del modelo usando colecciones de tipo `Set`.
+A partir del UML incluido en [docs/PROGRAMACION III Lombok - DTO.pdf](docs/PROGRAMACI%C3%93N%20III%20Lombok%20-%20DTO.pdf), se debe tomar como base el modelo de clases desarrollado en la Unidad 5 y adaptarlo a un proyecto Gradle con la libreria Lombok.
 
-En cada clase corresponde sobrescribir:
+En las clases del modelo se deben reemplazar metodos repetitivos utilizando, al menos, las siguientes anotaciones:
 
-- `toString()`
-- `equals()`
-- `hashCode()`
+- `@Getter` / `@Setter`
+- `@ToString`
+- `@EqualsAndHashCode`
+- `@Builder` / `@SuperBuilder`
+- `@AllArgsConstructor`
+- `@NoArgsConstructor`
+
+Tambien se debe crear un paquete de DTOs con un `record` llamado `UsuarioDTO`, que represente la informacion de `Usuario` sin exponer:
+
+- `Rol`
+- `Contrasena`
 
 ## Modelo del proyecto
 
-El proyecto contiene las siguientes entidades base:
+El proyecto contiene las siguientes entidades base del dominio:
 
 - `Usuario`
 - `Pedido`
@@ -33,9 +41,13 @@ Tambien incluye enums para representar datos del dominio:
 - `FormaPago`
 - `Rol`
 
+Ademas, debe incluir el DTO:
+
+- `UsuarioDTO`
+
 ## Datos a instanciar
 
-En la clase `Main` se deben crear:
+En la clase `Main` se deben crear las instancias utilizando el patron builder:
 
 - 2 usuarios
 - 3 pedidos, con al menos 2 detalles por pedido
@@ -49,12 +61,15 @@ Luego se debe mostrar por consola:
 - Los pedidos del usuario que mas pedidos tenga
 - La comparacion de un producto nuevo contra la coleccion, usando los campos definidos en `equals()`
 
+El `record` `UsuarioDTO` se utiliza para representar usuarios sin mostrar rol ni contrasena.
+
 ## Como ejecutar
 
 Requisitos:
 
 - Java instalado
 - Gradle Wrapper incluido en el proyecto
+- Lombok configurado como dependencia del proyecto
 
 Ejecutar desde la raiz del repositorio:
 
@@ -72,4 +87,4 @@ Si el plugin `application` no esta configurado, se puede compilar con:
 
 La consigna completa se encuentra en:
 
-[docs/PROGRAMACION III ToString-Colecciones.pdf](docs/PROGRAMACI%C3%93N%20III%20ToString-Colecciones.pdf)
+[docs/PROGRAMACION III Lombok - DTO.pdf](docs/PROGRAMACI%C3%93N%20III%20Lombok%20-%20DTO.pdf)

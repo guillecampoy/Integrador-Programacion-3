@@ -1,9 +1,9 @@
-package com.tup.programacion3.seed;
+package com.utn.seed;
 
-import com.tup.programacion3.entities.Categoria;
-import com.tup.programacion3.entities.Pedido;
-import com.tup.programacion3.entities.Producto;
-import com.tup.programacion3.entities.Usuario;
+import com.utn.entities.Categoria;
+import com.utn.entities.Pedido;
+import com.utn.entities.Producto;
+import com.utn.entities.Usuario;
 
 import java.util.Set;
 
