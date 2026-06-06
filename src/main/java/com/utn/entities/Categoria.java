@@ -2,6 +2,7 @@ package com.utn.entities;
 
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import java.util.HashSet;
 import java.util.Set;
 
 @Getter
@@ -9,12 +10,15 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-@EqualsAndHashCode(callSuper = false)
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 @ToString
 public class Categoria extends Base {
+    @EqualsAndHashCode.Include
     private String nombre;
     private String descripcion;
-    private Set<Producto> productos;
+    @Builder.Default
+    @ToString.Exclude
+    private Set<Producto> productos = new HashSet<>();
 
     public void addProducto(Producto producto) {
         this.productos.add(producto);

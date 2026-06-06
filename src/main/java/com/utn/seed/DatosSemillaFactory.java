@@ -257,24 +257,37 @@ public class DatosSemillaFactory {
     private static Set<Pedido> crearPedidos(UsuariosSemilla usuarios, ProductosSemilla productos) {
         Set<Pedido> pedidos = new LinkedHashSet<>();
 
-        Pedido pedido1 = new Pedido(LocalDate.of(2026, 5, 10), Estado.CONFIRMADO, FormaPago.TARJETA, usuarios.ana());
+        Pedido pedido1 = crearPedido(LocalDate.of(2026, 5, 10), Estado.CONFIRMADO, FormaPago.TARJETA, usuarios.ana());
         pedido1.addDetallePedido(productos.cafeMolido(), 1);
         pedido1.addDetallePedido(productos.gaseosa(), 2);
         pedidos.add(pedido1);
 
-        Pedido pedido2 = new Pedido(LocalDate.of(2026, 5, 12), Estado.PENDIENTE, FormaPago.EFECTIVO, usuarios.ana());
+        Pedido pedido2 = crearPedido(LocalDate.of(2026, 5, 12), Estado.PENDIENTE, FormaPago.EFECTIVO, usuarios.ana());
         pedido2.addDetallePedido(productos.yerbaMate(), 1);
         pedido2.addDetallePedido(productos.detergente(), 1);
         pedido2.addDetallePedido(productos.aguaMineral(), 3);
         pedidos.add(pedido2);
 
-        Pedido pedido3 = new Pedido(LocalDate.of(2026, 5, 13), Estado.TERMINADO, FormaPago.TRANSFERENCIA, usuarios.bruno());
+        Pedido pedido3 = crearPedido(LocalDate.of(2026, 5, 13), Estado.TERMINADO, FormaPago.TRANSFERENCIA, usuarios.bruno());
         pedido3.addDetallePedido(productos.arroz(), 2);
         pedido3.addDetallePedido(productos.fideos(), 4);
         pedido3.addDetallePedido(productos.lavandina(), 1);
         pedidos.add(pedido3);
 
         return pedidos;
+    }
+
+    private static Pedido crearPedido(LocalDate fecha, Estado estado, FormaPago formaPago, Usuario usuario) {
+        Pedido pedido = Pedido.builder()
+                .fecha(fecha)
+                .estado(estado)
+                .formaPago(formaPago)
+                .usuario(usuario)
+                .createdAt(LocalDateTime.now())
+                .eliminado(false)
+                .build();
+        usuario.addPedido(pedido);
+        return pedido;
     }
 
     private static Producto crearProductoEquivalenteAlCafeMolido() {

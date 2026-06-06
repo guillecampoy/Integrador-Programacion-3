@@ -11,7 +11,9 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @ToString
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public abstract class Base {
+    @EqualsAndHashCode.Include
     private Long id;
     private Boolean eliminado;
     private LocalDateTime createdAt;

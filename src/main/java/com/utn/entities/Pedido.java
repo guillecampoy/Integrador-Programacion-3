@@ -15,15 +15,21 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-@EqualsAndHashCode(callSuper = false)
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 @ToString
 public class Pedido extends Base implements Calculable {
+    @EqualsAndHashCode.Include
     private LocalDate fecha;
+    @EqualsAndHashCode.Include
     private Estado estado;
-    private Double total;
+    @Builder.Default
+    private Double total = 0.0;
+    @EqualsAndHashCode.Include
     private FormaPago formaPago;
+    @ToString.Exclude
     private Usuario usuario;
-    private Set<DetallePedido> detallePedidos;
+    @Builder.Default
+    private Set<DetallePedido> detallePedidos = new HashSet<>();
 
 
 
@@ -31,6 +37,7 @@ public class Pedido extends Base implements Calculable {
         DetallePedido detallePedido = DetallePedido.builder()
                 .producto(producto)
                 .cantidad(cantidad)
+                .subtotal(producto.getPrecio() * cantidad)
                 .build();
         this.detallePedidos.add(detallePedido);
         calcularTotal();

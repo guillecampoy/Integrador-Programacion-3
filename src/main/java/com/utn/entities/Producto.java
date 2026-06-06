@@ -8,9 +8,10 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-@EqualsAndHashCode(callSuper = false)
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 @ToString
 public class Producto extends Base {
+    @EqualsAndHashCode.Include
     private String nombre;
     private Double precio;
     private String descripcion;
