@@ -1,6 +1,6 @@
-package com.tup.programacion3.entities;
+package com.utn.entities;
 
-import com.tup.programacion3.enums.Rol;
+import com.utn.enums.Rol;
 
 import java.util.HashSet;
 import java.util.Objects;

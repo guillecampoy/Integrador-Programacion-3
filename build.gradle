@@ -11,7 +11,7 @@ repositories {
 }
 
 application {
-    mainClass = 'com.tup.programacion3.Main'
+    mainClass = 'com.utn.Main'
 }
 
 run {

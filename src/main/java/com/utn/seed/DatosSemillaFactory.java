@@ -1,12 +1,12 @@
-package com.tup.programacion3.seed;
+package com.utn.seed;
 
-import com.tup.programacion3.entities.Categoria;
-import com.tup.programacion3.entities.Pedido;
-import com.tup.programacion3.entities.Producto;
-import com.tup.programacion3.entities.Usuario;
-import com.tup.programacion3.enums.Estado;
-import com.tup.programacion3.enums.FormaPago;
-import com.tup.programacion3.enums.Rol;
+import com.utn.entities.Categoria;
+import com.utn.entities.Pedido;
+import com.utn.entities.Producto;
+import com.utn.entities.Usuario;
+import com.utn.enums.Estado;
+import com.utn.enums.FormaPago;
+import com.utn.enums.Rol;
 
 import java.time.LocalDate;
 import java.util.LinkedHashSet;

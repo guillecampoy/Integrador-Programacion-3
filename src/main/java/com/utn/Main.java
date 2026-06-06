@@ -1,10 +1,10 @@
-package com.tup.programacion3;
+package com.utn;
 
-import com.tup.programacion3.entities.Pedido;
-import com.tup.programacion3.entities.Producto;
-import com.tup.programacion3.entities.Usuario;
-import com.tup.programacion3.seed.DatosSemilla;
-import com.tup.programacion3.seed.DatosSemillaFactory;
+import com.utn.entities.Pedido;
+import com.utn.entities.Producto;
+import com.utn.entities.Usuario;
+import com.utn.seed.DatosSemilla;
+import com.utn.seed.DatosSemillaFactory;
 
 import java.util.Optional;
 import java.util.Scanner;

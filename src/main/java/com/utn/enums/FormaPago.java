@@ -1,4 +1,4 @@
-package com.tup.programacion3.enums;
+package com.utn.enums;
 
 public enum FormaPago {
     TARJETA,

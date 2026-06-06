@@ -1,4 +1,4 @@
-package com.tup.programacion3.entities;
+package com.utn.entities;
 
 import java.time.LocalDateTime;
 import java.util.Objects;

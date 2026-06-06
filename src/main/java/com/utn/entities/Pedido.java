@@ -1,7 +1,7 @@
-package com.tup.programacion3.entities;
+package com.utn.entities;
 
-import com.tup.programacion3.enums.Estado;
-import com.tup.programacion3.enums.FormaPago;
+import com.utn.enums.Estado;
+import com.utn.enums.FormaPago;
 
 import java.time.LocalDate;
 import java.util.HashSet;
