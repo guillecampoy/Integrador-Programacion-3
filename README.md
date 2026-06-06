@@ -19,7 +19,7 @@ En las clases del modelo se deben reemplazar metodos repetitivos utilizando, al 
 - `@AllArgsConstructor`
 - `@NoArgsConstructor`
 
-Tambien se debe crear un paquete `DTOs` con un `record` llamado `UsuarioDTO`, que represente la informacion de `Usuario` sin exponer:
+Tambien se debe crear un paquete de DTOs con un `record` llamado `UsuarioDTO`, que represente la informacion de `Usuario` sin exponer:
 
 - `Rol`
 - `Contrasena`
@@ -60,7 +60,8 @@ Luego se debe mostrar por consola:
 - El listado de productos cargados
 - Los pedidos del usuario que mas pedidos tenga
 - La comparacion de un producto nuevo contra la coleccion, usando los campos definidos en `equals()`
-- La informacion de usuario mediante `UsuarioDTO`, ocultando rol y contrasena
+
+El `record` `UsuarioDTO` se utiliza para representar usuarios sin mostrar rol ni contrasena.
 
 ## Como ejecutar
 

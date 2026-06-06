@@ -1,7 +1,6 @@
 package com.utn.dtos;
 
 import com.utn.entities.Usuario;
-import lombok.NonNull;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -31,7 +30,7 @@ public record UsuarioDTO(
     }
 
     @Override
-    public @NonNull String toString() {
+    public String toString() {
         return "UsuarioDTO[" +
                 "id=" + id +
                 ", eliminado=" + eliminado +

@@ -58,23 +58,11 @@ public class DatosSemillaFactory {
                 .rol(Rol.ADMIN)
                 .eliminado(false)
                 .build();
-        Usuario guille = Usuario.builder()
-                .nombre("Guillermo")
-                .apellido("Campoy")
-                .id(66L)
-                .mail("gcampoy@gmail.com")
-                .celular("1164725999")
-                .contrasenia("gcampoy89")
-                .createdAt(LocalDateTime.now())
-                .rol(Rol.USUARIO)
-                .eliminado(false)
-                .build();
 
         usuarios.add(ana);
         usuarios.add(bruno);
-        usuarios.add(guille);
 
-        return new UsuariosSemilla(usuarios, ana, bruno, guille);
+        return new UsuariosSemilla(usuarios, ana, bruno);
     }
 
     private static CategoriasSemilla crearCategorias() {
@@ -312,7 +300,7 @@ public class DatosSemillaFactory {
                 .build();
     }
 
-    private record UsuariosSemilla(Set<Usuario> todos, Usuario ana, Usuario bruno, Usuario guille) {
+    private record UsuariosSemilla(Set<Usuario> todos, Usuario ana, Usuario bruno) {
     }
 
     private record CategoriasSemilla(Set<Categoria> todas, Categoria almacen, Categoria bebidas, Categoria limpieza) {
