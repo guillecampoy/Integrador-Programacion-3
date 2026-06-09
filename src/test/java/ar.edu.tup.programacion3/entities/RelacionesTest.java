@@ -1,9 +1,9 @@
-package com.utn.entities;
+package ar.edu.tup.programacion3.entities;
 
-import com.utn.enums.Estado;
-import com.utn.enums.FormaPago;
-import com.utn.seed.DatosSemilla;
-import com.utn.seed.DatosSemillaFactory;
+import ar.edu.tup.programacion3.enums.Estado;
+import ar.edu.tup.programacion3.enums.FormaPago;
+import ar.edu.tup.programacion3.seed.DatosSemilla;
+import ar.edu.tup.programacion3.seed.DatosSemillaFactory;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;

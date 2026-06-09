@@ -1,4 +1,4 @@
-package com.utn.entities;
+package ar.edu.tup.programacion3.entities;
 
 public interface Calculable {
     public void calcularTotal();

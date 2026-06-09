@@ -1,9 +1,9 @@
-package com.utn;
+package ar.edu.tup.programacion3;
 
-import com.utn.entities.Pedido;
-import com.utn.entities.Producto;
-import com.utn.seed.DatosSemilla;
-import com.utn.seed.DatosSemillaFactory;
+import ar.edu.tup.programacion3.entities.Pedido;
+import ar.edu.tup.programacion3.entities.Producto;
+import ar.edu.tup.programacion3.seed.DatosSemilla;
+import ar.edu.tup.programacion3.seed.DatosSemillaFactory;
 
 public class Main {
     public static void main(String[] args) {

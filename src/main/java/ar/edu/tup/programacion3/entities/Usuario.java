@@ -1,7 +1,7 @@
-package com.utn.entities;
+package ar.edu.tup.programacion3.entities;
 
-import com.utn.dtos.UsuarioDTO;
-import com.utn.enums.Rol;
+import ar.edu.tup.programacion3.dtos.UsuarioDTO;
+import ar.edu.tup.programacion3.enums.Rol;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import java.util.HashSet;

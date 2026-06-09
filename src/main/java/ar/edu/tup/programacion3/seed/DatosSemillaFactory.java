@@ -1,12 +1,12 @@
-package com.utn.seed;
+package ar.edu.tup.programacion3.seed;
 
-import com.utn.entities.Categoria;
-import com.utn.entities.Pedido;
-import com.utn.entities.Producto;
-import com.utn.entities.Usuario;
-import com.utn.enums.Estado;
-import com.utn.enums.FormaPago;
-import com.utn.enums.Rol;
+import ar.edu.tup.programacion3.entities.Categoria;
+import ar.edu.tup.programacion3.entities.Pedido;
+import ar.edu.tup.programacion3.entities.Producto;
+import ar.edu.tup.programacion3.entities.Usuario;
+import ar.edu.tup.programacion3.enums.Estado;
+import ar.edu.tup.programacion3.enums.FormaPago;
+import ar.edu.tup.programacion3.enums.Rol;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
