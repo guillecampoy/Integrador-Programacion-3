@@ -13,7 +13,7 @@ import java.util.Set;
 @AllArgsConstructor
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public class Usuario extends Base{
+public class Usuario extends Base {
     private String nombre;
     private String apellido;
     @EqualsAndHashCode.Include
@@ -26,7 +26,13 @@ public class Usuario extends Base{
     private Set<Pedido> pedidos = new HashSet<>();
 
     public void addPedido(Pedido pedido) {
+        if (pedido == null) {
+            return;
+        }
         this.pedidos.add(pedido);
+        if (pedido.getUsuario() != this) {
+            pedido.setUsuario(this);
+        }
     }
 
     @Override

@@ -211,7 +211,7 @@ public class DatosSemillaFactory {
                 .descripcion("Esponja multiuso doble cara")
                 .imagen("esponja.jpg")
                 .disponible(true)
-                .stock(20)
+                .stock(4)
                 .categoria(categorias.almacen())
                 .id(10L)
                 .createdAt(LocalDateTime.now())
@@ -228,6 +228,17 @@ public class DatosSemillaFactory {
         productos.add(detergente);
         productos.add(lavandina);
         productos.add(esponja);
+
+        categorias.almacen().addProducto(cafeMolido);
+        categorias.almacen().addProducto(yerbaMate);
+        categorias.almacen().addProducto(arroz);
+        categorias.almacen().addProducto(fideos);
+        categorias.bebidas().addProducto(gaseosa);
+        categorias.bebidas().addProducto(aguaMineral);
+        categorias.almacen().addProducto(jugoNaranja);
+        categorias.limpieza().addProducto(detergente);
+        categorias.limpieza().addProducto(lavandina);
+        categorias.almacen().addProducto(esponja);
 
         return new ProductosSemilla(
                 productos,

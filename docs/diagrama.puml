@@ -1,33 +1,15 @@
 @startuml Implementacion
 
-class Base {
+skinparam classAttributeIconSize 0
+
+abstract class Base {
     - id: Long
     - eliminado: Boolean
     - createdAt: LocalDateTime
 }
 
-Base <|-- Pedido
-Base <|-- Categoria
-Base <|-- Usuario
-Base <|-- Producto
-Base <|-- DetallePedido
-
 interface Calculable {
     + calcularTotal(): void
-}
-
-Calculable <|.. Pedido
-Pedido *-- "1..m" DetallePedido
-Usuario "1" --> "1..m" Pedido
-
-class Pedido {
-    - fecha: LocalDate
-    - estado: Estado
-    - total: Double
-    -formaPago: FormaPago
-    + addDetallePedido(int, Producto): void
-    + findDetallePedidoByProducto(Producto): DetallePedido
-    + deleteDetallePedidoByProducto(Producto): void
 }
 
 class Usuario {
@@ -35,15 +17,19 @@ class Usuario {
     - apellido: String
     - mail: String
     - celular: String
-    - contraseña: String
+    - contrasenia: String
     - rol: Rol
+    - pedidos: Set<Pedido>
+    + addPedido(Pedido): void
+    + toString(): String
 }
 
 class Categoria {
     - nombre: String
     - descripcion: String
+    - productos: Set<Producto>
+    + addProducto(Producto): void
 }
-Categoria o-- "1..m" Producto
 
 class Producto {
     - nombre: String
@@ -52,13 +38,106 @@ class Producto {
     - stock: int
     - imagen: String
     - disponible: Boolean
+    - categoria: Categoria
+    + setCategoria(Categoria): void
 }
 
-DetallePedido "*" --> "1" Producto 
+class Pedido {
+    - fecha: LocalDate
+    - estado: Estado
+    - total: Double
+    - formaPago: FormaPago
+    - usuario: Usuario
+    - detallePedidos: Set<DetallePedido>
+    + setUsuario(Usuario): void
+    + addDetallePedido(int, Producto): void
+    + addDetallePedido(Producto, int): void
+    + findDetallePedidoByProducto(Producto): DetallePedido
+    + findeDetallePedidoByProducto(Producto): DetallePedido
+    + deleteDetallePedidoByProducto(Producto): void
+    + Pedido(Usuario)
+    + Pedido(LocalDate, Estado, FormaPago, Usuario)
+    + calcularTotal(): void
+}
 
 class DetallePedido {
     - cantidad: int
     - subtotal: Double
+    - producto: Producto
+}
+
+class UsuarioDTO <<record>> {
+    - id: Long
+    - eliminado: Boolean
+    - createdAt: LocalDateTime
+    - nombre: String
+    - apellido: String
+    - mail: String
+    - celular: String
+    - ARG_DATE_TIME_FORMAT: DateTimeFormatter
+    + from(Usuario): UsuarioDTO
+    + toString(): String
+    - formatCreatedAt(): String
+}
+
+class DatosSemilla <<record>> {
+    - usuarios: Set<Usuario>
+    - categorias: Set<Categoria>
+    - productos: Set<Producto>
+    - pedidos: Set<Pedido>
+    - productoParaMostrar: Producto
+    - productoParaComparar: Producto
+    + usuarios(): Set<Usuario>
+    + categorias(): Set<Categoria>
+    + productos(): Set<Producto>
+    + pedidos(): Set<Pedido>
+    + productoParaMostrar(): Producto
+    + productoParaComparar(): Producto
+}
+
+class DatosSemillaFactory {
+    - DatosSemillaFactory()
+    + crear(): DatosSemilla
+    - crearUsuarios(): UsuariosSemilla
+    - crearCategorias(): CategoriasSemilla
+    - crearProductos(CategoriasSemilla): ProductosSemilla
+    - crearPedidos(UsuariosSemilla, ProductosSemilla): Set<Pedido>
+    - crearPedido(LocalDate, Estado, FormaPago, Usuario): Pedido
+    - crearProductoEquivalenteAlCafeMolido(): Producto
+}
+
+class UsuariosSemilla <<record>> {
+    - todos: Set<Usuario>
+    - ana: Usuario
+    - bruno: Usuario
+}
+
+class CategoriasSemilla <<record>> {
+    - todas: Set<Categoria>
+    - almacen: Categoria
+    - bebidas: Categoria
+    - limpieza: Categoria
+}
+
+class ProductosSemilla <<record>> {
+    - todos: Set<Producto>
+    - cafeMolido: Producto
+    - yerbaMate: Producto
+    - arroz: Producto
+    - fideos: Producto
+    - gaseosa: Producto
+    - aguaMineral: Producto
+    - detergente: Producto
+    - lavandina: Producto
+}
+
+class Main {
+    + main(String[]): void
+    - mostrarResumenDatos(DatosSemilla): void
+    - mostrarProductosDisponibles(DatosSemilla): void
+    - mostrarTotalPedido(Pedido): void
+    - mostrarCantidadItemsPedido(Pedido): void
+    - mostrarProductosConStockBajo(DatosSemilla): void
 }
 
 enum FormaPago {
@@ -78,4 +157,34 @@ enum Estado {
     TERMINADO
     CANCELADO
 }
+
+Base <|-- Usuario
+Base <|-- Categoria
+Base <|-- Producto
+Base <|-- Pedido
+Base <|-- DetallePedido
+
+Calculable <|.. Pedido
+
+Usuario --> "1..m" Pedido
+Pedido *-- "1..m" DetallePedido
+DetallePedido "m" --> "1" Producto
+Categoria o-- "1..m" Producto
+UsuarioDTO ..> Usuario
+DatosSemilla o-- "0..*" Usuario
+DatosSemilla o-- "0..*" Categoria
+DatosSemilla o-- "0..*" Producto
+DatosSemilla o-- "0..*" Pedido
+DatosSemillaFactory ..> DatosSemilla
+DatosSemillaFactory ..> Usuario
+DatosSemillaFactory ..> Categoria
+DatosSemillaFactory ..> Producto
+DatosSemillaFactory ..> Pedido
+DatosSemillaFactory ..> UsuariosSemilla
+DatosSemillaFactory ..> CategoriasSemilla
+DatosSemillaFactory ..> ProductosSemilla
+Main ..> DatosSemilla
+Main ..> DatosSemillaFactory
+Main ..> Pedido
+
 @enduml
