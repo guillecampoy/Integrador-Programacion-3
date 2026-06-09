@@ -1,7 +1,7 @@
-package com.utn.entities;
+package ar.edu.tup.programacion3.entities;
 
-import com.utn.enums.Estado;
-import com.utn.enums.FormaPago;
+import ar.edu.tup.programacion3.enums.Estado;
+import ar.edu.tup.programacion3.enums.FormaPago;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -32,6 +32,21 @@ public class Pedido extends Base implements Calculable {
     private Set<DetallePedido> detallePedidos = new HashSet<>();
 
 
+    public void setUsuario(Usuario usuario) {
+        if (this.usuario == usuario) {
+            return;
+        }
+
+        Usuario usuarioAnterior = this.usuario;
+        this.usuario = usuario;
+
+        if (usuarioAnterior != null) {
+            usuarioAnterior.getPedidos().remove(this);
+        }
+        if (usuario != null && !usuario.getPedidos().contains(this)) {
+            usuario.addPedido(this);
+        }
+    }
 
     public void addDetallePedido(int cantidad, Producto producto) {
         DetallePedido detallePedido = DetallePedido.builder()

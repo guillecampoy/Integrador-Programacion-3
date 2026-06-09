@@ -1,4 +1,4 @@
-package com.utn.entities;
+package ar.edu.tup.programacion3.entities;
 
 import lombok.*;
 import lombok.experimental.SuperBuilder;

@@ -1,4 +1,4 @@
-package com.utn.entities;
+package ar.edu.tup.programacion3.entities;
 
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -21,7 +21,13 @@ public class Categoria extends Base {
     private Set<Producto> productos = new HashSet<>();
 
     public void addProducto(Producto producto) {
+        if (producto == null) {
+            return;
+        }
         this.productos.add(producto);
+        if (producto.getCategoria() != this) {
+            producto.setCategoria(this);
+        }
     }
 
 }

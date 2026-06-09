@@ -1,6 +1,6 @@
-package com.utn.dtos;
+package ar.edu.tup.programacion3.dtos;
 
-import com.utn.entities.Usuario;
+import ar.edu.tup.programacion3.entities.Usuario;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
