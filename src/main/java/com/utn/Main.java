@@ -36,7 +36,7 @@ public class Main {
 
     private static void mostrarTotalPedido(Pedido pedido) {
         pedido.calcularTotal();
-        System.out.println("Total del pedido del " + pedido.getFecha() + ": $" + pedido.getTotal());
+        System.out.println("Total del pedido número(id):" + pedido.getId() + " Fecha pedido: " +  pedido.getFecha() + " Importe: $" + pedido.getTotal());
         System.out.println();
     }
 
@@ -45,7 +45,7 @@ public class Main {
                 .mapToInt(detallePedido -> detallePedido.getCantidad())
                 .sum();
 
-        System.out.println("Cantidad total de items del pedido del " + pedido.getFecha() + ": " + cantidadItems);
+        System.out.println("Cantidad total de items del pedido(id):" + pedido.getId() + " Fecha pedido: " +  pedido.getFecha() + ": " + cantidadItems);
         System.out.println();
     }
 

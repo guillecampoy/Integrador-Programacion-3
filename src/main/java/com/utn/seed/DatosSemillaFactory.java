@@ -14,10 +14,11 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class DatosSemillaFactory {
-    private DatosSemillaFactory() {
-    }
+        private DatosSemillaFactory() {
 
-    public static DatosSemilla crear() {
+        }
+
+public static DatosSemilla crear() {
         UsuariosSemilla usuarios = crearUsuarios();
         CategoriasSemilla categorias = crearCategorias();
         ProductosSemilla productos = crearProductos(categorias);
@@ -32,9 +33,9 @@ public class DatosSemillaFactory {
                 productos.cafeMolido(),
                 productoParaComparar
         );
-    }
+}
 
-    private static UsuariosSemilla crearUsuarios() {
+private static UsuariosSemilla crearUsuarios() {
         Set<Usuario> usuarios = new LinkedHashSet<>();
         Usuario ana = Usuario.builder()
                 .nombre("Ana")
@@ -63,9 +64,9 @@ public class DatosSemillaFactory {
         usuarios.add(bruno);
 
         return new UsuariosSemilla(usuarios, ana, bruno);
-    }
+}
 
-    private static CategoriasSemilla crearCategorias() {
+private static CategoriasSemilla crearCategorias() {
         Set<Categoria> categorias = new LinkedHashSet<>();
         Categoria almacen = Categoria.builder()
                 .nombre("Almacen")
@@ -93,9 +94,9 @@ public class DatosSemillaFactory {
         categorias.add(limpieza);
 
         return new CategoriasSemilla(categorias, almacen, bebidas, limpieza);
-    }
+}
 
-    private static ProductosSemilla crearProductos(CategoriasSemilla categorias) {
+private static ProductosSemilla crearProductos(CategoriasSemilla categorias) {
         Set<Producto> productos = new LinkedHashSet<>();
         Producto cafeMolido = Producto.builder()
                 .nombre("Cafe molido")
@@ -217,6 +218,18 @@ public class DatosSemillaFactory {
                 .createdAt(LocalDateTime.now())
                 .eliminado(false)
                 .build();
+        Producto jabonTocador = Producto.builder()
+                .nombre("Jabón de manos")
+                .precio(1100.0)
+                .descripcion("Jabón neutro")
+                .imagen("jabon_tocador.jpg")
+                .disponible(true)
+                .stock(2)
+                .categoria(categorias.almacen())
+                .id(11L)
+                .createdAt(LocalDateTime.now())
+                .eliminado(false)
+                .build();
 
         productos.add(cafeMolido);
         productos.add(yerbaMate);
@@ -228,6 +241,7 @@ public class DatosSemillaFactory {
         productos.add(detergente);
         productos.add(lavandina);
         productos.add(esponja);
+        productos.add(jabonTocador);
 
         categorias.almacen().addProducto(cafeMolido);
         categorias.almacen().addProducto(yerbaMate);
@@ -238,6 +252,7 @@ public class DatosSemillaFactory {
         categorias.almacen().addProducto(jugoNaranja);
         categorias.limpieza().addProducto(detergente);
         categorias.limpieza().addProducto(lavandina);
+        categorias.limpieza().addProducto(jabonTocador);
         categorias.almacen().addProducto(esponja);
 
         return new ProductosSemilla(
@@ -251,9 +266,9 @@ public class DatosSemillaFactory {
                 detergente,
                 lavandina
         );
-    }
+}
 
-    private static Set<Pedido> crearPedidos(UsuariosSemilla usuarios, ProductosSemilla productos) {
+private static Set<Pedido> crearPedidos(UsuariosSemilla usuarios, ProductosSemilla productos) {
         Set<Pedido> pedidos = new LinkedHashSet<>();
 
         Pedido pedido1 = crearPedido(LocalDate.of(2026, 5, 10), Estado.CONFIRMADO, FormaPago.TARJETA, usuarios.ana());
@@ -274,9 +289,9 @@ public class DatosSemillaFactory {
         pedidos.add(pedido3);
 
         return pedidos;
-    }
+}
 
-    private static Pedido crearPedido(LocalDate fecha, Estado estado, FormaPago formaPago, Usuario usuario) {
+private static Pedido crearPedido(LocalDate fecha, Estado estado, FormaPago formaPago, Usuario usuario) {
         Pedido pedido = Pedido.builder()
                 .fecha(fecha)
                 .estado(estado)
@@ -287,9 +302,9 @@ public class DatosSemillaFactory {
                 .build();
         usuario.addPedido(pedido);
         return pedido;
-    }
+}
 
-    private static Producto crearProductoEquivalenteAlCafeMolido() {
+private static Producto crearProductoEquivalenteAlCafeMolido() {
         Categoria categoriaEquivalente = Categoria.builder()
                 .nombre("Almacen")
                 .descripcion("Productos secos y envasados")
@@ -309,24 +324,24 @@ public class DatosSemillaFactory {
                 .createdAt(LocalDateTime.now())
                 .eliminado(false)
                 .build();
-    }
+}
 
-    private record UsuariosSemilla(Set<Usuario> todos, Usuario ana, Usuario bruno) {
-    }
+private record UsuariosSemilla(Set<Usuario> todos, Usuario ana, Usuario bruno) {
+}
 
-    private record CategoriasSemilla(Set<Categoria> todas, Categoria almacen, Categoria bebidas, Categoria limpieza) {
-    }
+private record CategoriasSemilla(Set<Categoria> todas, Categoria almacen, Categoria bebidas, Categoria limpieza) {
+}
 
-    private record ProductosSemilla(
-            Set<Producto> todos,
-            Producto cafeMolido,
-            Producto yerbaMate,
-            Producto arroz,
-            Producto fideos,
-            Producto gaseosa,
-            Producto aguaMineral,
-            Producto detergente,
-            Producto lavandina
-    ) {
-    }
+private record ProductosSemilla(
+        Set<Producto> todos,
+        Producto cafeMolido,
+        Producto yerbaMate,
+        Producto arroz,
+        Producto fideos,
+        Producto gaseosa,
+        Producto aguaMineral,
+        Producto detergente,
+        Producto lavandina
+) {
+}
 }
