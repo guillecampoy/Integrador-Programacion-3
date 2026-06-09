@@ -1,28 +1,21 @@
-# TP Lombok - DTO
+# TP Programacion Funcional
 
-Trabajo practico de Programacion III sobre modelado de objetos, uso de Lombok para reducir codigo repetitivo y creacion de DTOs para ocultar informacion sensible.
+Trabajo practico de Programacion III sobre programacion funcional en Java, usando expresiones lambda y Streams para procesar colecciones de forma declarativa.
 
 ## Objetivo
 
-Configurar el proyecto con Gradle, incorporar Lombok y crear DTOs con `record` para transferir informacion sin exponer datos sensibles.
+Practicar operaciones intermedias y terminales de Streams en Java para procesar colecciones, calcular totales y generar consultas sobre los datos del dominio.
 
 ## Consigna
 
-A partir del UML incluido en [docs/PROGRAMACION III Lombok - DTO.pdf](docs/PROGRAMACI%C3%93N%20III%20Lombok%20-%20DTO.pdf), se debe tomar como base el modelo de clases desarrollado en la Unidad 5 y adaptarlo a un proyecto Gradle con la libreria Lombok.
+A partir del UML incluido en [docs/Trabajo Practico Programacion Funcional.pdf](docs/Trabajo%20Pr%C3%A1ctico%20Programaci%C3%B3n%20Funcional.pdf), se debe tomar como base el modelo de clases desarrollado en las entregas anteriores y aplicar programacion funcional.
 
-En las clases del modelo se deben reemplazar metodos repetitivos utilizando, al menos, las siguientes anotaciones:
+Se deben resolver las operaciones pedidas utilizando Streams y expresiones lambda:
 
-- `@Getter` / `@Setter`
-- `@ToString`
-- `@EqualsAndHashCode`
-- `@Builder` / `@SuperBuilder`
-- `@AllArgsConstructor`
-- `@NoArgsConstructor`
-
-Tambien se debe crear un paquete de DTOs con un `record` llamado `UsuarioDTO`, que represente la informacion de `Usuario` sin exponer:
-
-- `Rol`
-- `Contrasena`
+- Desarrollar un metodo en `Pedido` que calcule el total del pedido.
+- Mostrar por consola los productos disponibles.
+- Mostrar por consola la cantidad total de items que tiene un pedido.
+- Detectar productos que tengan menos de 5 unidades en stock.
 
 ## Modelo del proyecto
 
@@ -47,7 +40,7 @@ Ademas, debe incluir el DTO:
 
 ## Datos a instanciar
 
-En la clase `Main` se deben crear las instancias utilizando el patron builder:
+En la clase `Main` se deben crear las instancias necesarias para ejecutar las operaciones funcionales:
 
 - 2 usuarios
 - 3 pedidos, con al menos 2 detalles por pedido
@@ -56,12 +49,12 @@ En la clase `Main` se deben crear las instancias utilizando el patron builder:
 
 Luego se debe mostrar por consola:
 
-- Un producto usando `toString()`
-- El listado de productos cargados
-- Los pedidos del usuario que mas pedidos tenga
-- La comparacion de un producto nuevo contra la coleccion, usando los campos definidos en `equals()`
+- Productos disponibles.
+- Total calculado de un pedido.
+- Cantidad total de items de un pedido.
+- Productos con stock menor a 5.
 
-El `record` `UsuarioDTO` se utiliza para representar usuarios sin mostrar rol ni contrasena.
+El modelo conserva la base de las entregas anteriores, incluyendo Lombok y el `record` `UsuarioDTO`.
 
 ## Como ejecutar
 
@@ -87,4 +80,4 @@ Si el plugin `application` no esta configurado, se puede compilar con:
 
 La consigna completa se encuentra en:
 
-[docs/PROGRAMACION III Lombok - DTO.pdf](docs/PROGRAMACI%C3%93N%20III%20Lombok%20-%20DTO.pdf)
+[docs/Trabajo Practico Programacion Funcional.pdf](docs/Trabajo%20Pr%C3%A1ctico%20Programaci%C3%B3n%20Funcional.pdf)
