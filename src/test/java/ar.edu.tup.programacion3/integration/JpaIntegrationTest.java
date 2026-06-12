@@ -43,6 +43,8 @@ class JpaIntegrationTest {
             datosSemilla.categorias().forEach(entityManager::persist);
             datosSemilla.usuarios().forEach(entityManager::persist);
         });
+
+        imprimirResultado("SETUP", "Base H2 lista, tablas limpiadas y datos semilla persistidos");
     }
 
     @AfterAll
@@ -80,6 +82,11 @@ class JpaIntegrationTest {
                 assertTrue(detallePedido.getSubtotal() > 0);
             });
         });
+
+        imprimirResultado(
+                "PERSISTENCIA",
+                "usuarios=2, categorias=3, productos=11, pedidos=3, pedidosConDetalles>=2"
+        );
     }
 
     @Test
@@ -102,6 +109,11 @@ class JpaIntegrationTest {
         assertEquals(19, cafeActualizado.getStock());
         assertEquals(3000.0, yerbaActualizada.getPrecio());
         assertEquals(46, yerbaActualizada.getStock());
+
+        imprimirResultado(
+                "UPDATE",
+                "producto 1 precio=3300.0 stock=19, producto 2 precio=3000.0 stock=46"
+        );
     }
 
     @Test
@@ -112,6 +124,8 @@ class JpaIntegrationTest {
         assertNotNull(usuario);
         assertEquals("Ana", usuario.getNombre());
         assertEquals("anagarcia@gmail.com", usuario.getMail());
+
+        imprimirResultado("BUSQUEDA_ID", "id=48, nombre=Ana, mail=anagarcia@gmail.com");
     }
 
     @Test
@@ -128,6 +142,8 @@ class JpaIntegrationTest {
 
         assertEquals(50L, usuario.getId());
         assertEquals("Bruno", usuario.getNombre());
+
+        imprimirResultado("BUSQUEDA_MAIL", "mail=bjuarez90@gmail.com, id=50, nombre=Bruno");
     }
 
     @Test
@@ -150,6 +166,8 @@ class JpaIntegrationTest {
                         .isEmpty()
         );
         assertTrue(productoBorrado);
+
+        imprimirResultado("DELETE", "producto id=11 eliminado, productos restantes=10");
     }
 
     private void limpiarBase(EntityManager entityManager) {
@@ -197,5 +215,9 @@ class JpaIntegrationTest {
         } finally {
             entityManager.close();
         }
+    }
+
+    private void imprimirResultado(String paso, String resultado) {
+        System.out.println("[JPA-INTEGRATION] " + paso + " -> " + resultado);
     }
 }
