@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -28,20 +29,32 @@ public class PersistenciaInicial implements AutoCloseable {
     private final boolean baseLocalExistia;
     private boolean datosInicialesPersistidos;
 
-    private PersistenciaInicial(boolean baseLocalExistia) {
-        this.baseLocalExistia = baseLocalExistia;
-        this.entityManagerFactory = Persistence.createEntityManagerFactory(UNIDAD_PERSISTENCIA);
+    private PersistenciaInicial(Path baseLocal, List<Path> archivosBaseLocal, String jdbcUrl) {
+        this.baseLocalExistia = existeBaseLocal(baseLocal);
+        this.entityManagerFactory = Persistence.createEntityManagerFactory(
+                UNIDAD_PERSISTENCIA,
+                Map.of("jakarta.persistence.jdbc.url", jdbcUrl)
+        );
     }
 
     public static PersistenciaInicial inicializar() {
-        boolean baseLocalExistia = existeBaseLocal();
-        PersistenciaInicial persistenciaInicial = new PersistenciaInicial(baseLocalExistia);
+        PersistenciaInicial persistenciaInicial = new PersistenciaInicial(
+                BASE_LOCAL,
+                ARCHIVOS_BASE_LOCAL,
+                "jdbc:h2:file:./data/jpa_db;AUTO_SERVER=TRUE"
+        );
+        persistenciaInicial.persistirDatosInicialesSiCorresponde();
+        return persistenciaInicial;
+    }
+
+    static PersistenciaInicial inicializar(Path baseLocal, List<Path> archivosBaseLocal, String jdbcUrl) {
+        PersistenciaInicial persistenciaInicial = new PersistenciaInicial(baseLocal, archivosBaseLocal, jdbcUrl);
         persistenciaInicial.persistirDatosInicialesSiCorresponde();
         return persistenciaInicial;
     }
 
     public static boolean existeBaseLocal() {
-        return Files.exists(BASE_LOCAL);
+        return existeBaseLocal(BASE_LOCAL);
     }
 
     public static void borrarBaseLocal() {
@@ -81,6 +94,10 @@ public class PersistenciaInicial implements AutoCloseable {
     private boolean debePersistirDatosIniciales() {
         ResumenPersistencia resumen = contarDatos();
         return !baseLocalExistia || resumen.totalRegistros() == 0;
+    }
+
+    private static boolean existeBaseLocal(Path baseLocal) {
+        return Files.exists(baseLocal);
     }
 
     private long contar(EntityManager entityManager, Class<?> entityClass) {

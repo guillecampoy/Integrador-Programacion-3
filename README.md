@@ -51,6 +51,8 @@ La base de datos sugerida es H2 en archivo:
 jdbc:h2:file:./data/jpa_db;AUTO_SERVER=TRUE
 ```
 
+La carpeta `data/` no se versiona. La aplicacion genera nuevamente la base local cuando no detecta `data/jpa_db.mv.db`.
+
 Las clases del dominio deben anotarse como entidades JPA y registrar sus relaciones correspondientes.
 
 ## Modelo del proyecto
@@ -137,6 +139,8 @@ El test `JpaIntegrationTest` valida el flujo end to end solicitado por la consig
 - Busca un usuario por `mail`.
 - Borra 1 producto.
 - Cierra los recursos de JPA al finalizar.
+
+El test `PersistenciaInicialTest` valida especificamente que, si la base H2 local no existe, el inicializador crea una base nueva y persiste la semilla. Para no tocar la base de desarrollo, usa un directorio temporal de JUnit y una URL `jdbc:h2:file:` apuntando a ese temporal.
 
 ## Conclusiones esperadas
 
