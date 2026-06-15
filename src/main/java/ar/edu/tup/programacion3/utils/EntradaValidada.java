@@ -1,12 +1,12 @@
 package ar.edu.tup.programacion3.utils;
 
+import static ar.edu.tup.programacion3.utils.ConsolaUtils.imprimirError;
+
 import java.util.Set;
 import java.util.Scanner;
 import java.util.function.Predicate;
 
 public class EntradaValidada {
-    private static final String PREFIJO_ERROR = "  ! ";
-
     private final Scanner scanner;
 
     public EntradaValidada(Scanner scanner) {
@@ -141,7 +141,4 @@ public class EntradaValidada {
         return scanner.nextLine().trim();
     }
 
-    private void imprimirError(String mensaje) {
-        System.out.println(PREFIJO_ERROR + mensaje);
-    }
 }

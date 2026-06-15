@@ -3,6 +3,15 @@ package ar.edu.tup.programacion3;
 import ar.edu.tup.programacion3.utils.EntradaValidada;
 import ar.edu.tup.programacion3.seed.PersistenciaInicial;
 
+import static ar.edu.tup.programacion3.utils.ConsolaUtils.SEPARADOR;
+import static ar.edu.tup.programacion3.utils.ConsolaUtils.imprimirDato;
+import static ar.edu.tup.programacion3.utils.ConsolaUtils.imprimirError;
+import static ar.edu.tup.programacion3.utils.ConsolaUtils.imprimirMensaje;
+import static ar.edu.tup.programacion3.utils.ConsolaUtils.imprimirOpcion;
+import static ar.edu.tup.programacion3.utils.ConsolaUtils.imprimirSubtitulo;
+import static ar.edu.tup.programacion3.utils.ConsolaUtils.imprimirTitulo;
+import static ar.edu.tup.programacion3.utils.ConsolaUtils.prompt;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -12,9 +21,6 @@ import java.util.function.BiFunction;
 
 public class Main {
     private static final String JDBC_H2_LOCAL = "jdbc:h2:file:./data/jpa_db;AUTO_SERVER=TRUE";
-    private static final String SEPARADOR_MENU = "------------------------------------------------------------";
-    private static final String PREFIJO_MENSAJE = "  > ";
-    private static final String PREFIJO_ERROR = "  ! ";
     private static final int CANTIDAD_PRODUCTOS_A_ACTUALIZAR = 2;
     private static final List<CampoProductoEditable> CAMPOS_PRODUCTO_EDITABLES = List.of(
             new CampoProductoEditable("1", "Nombre", Main::leerActualizacionNombre),
@@ -85,58 +91,25 @@ public class Main {
         imprimirDato("JDBC URL", JDBC_H2_LOCAL);
         imprimirDato("Usuario", "sa");
         imprimirDato("Password", "<vacio>");
-        System.out.println(SEPARADOR_MENU);
+        System.out.println(SEPARADOR);
     }
 
     private static void mostrarMenu() {
         System.out.println();
-        System.out.println(SEPARADOR_MENU);
+        System.out.println(SEPARADOR);
         System.out.println("MENU PRINCIPAL");
-        System.out.println(SEPARADOR_MENU);
-        imprimirOpcionMenu("1", "Mostrar estado");
-        imprimirOpcionMenu("2", "Borrar base local y reinstanciar semilla");
-        imprimirOpcionMenu("3", "Actualizar " + CANTIDAD_PRODUCTOS_A_ACTUALIZAR + " productos");
-        imprimirOpcionMenu("4", "Buscar usuario por id");
-        imprimirOpcionMenu("5", "Buscar usuario por mail parcial");
-        imprimirOpcionMenu("6", "Borrar 1 producto");
-        imprimirOpcionMenu("7", "Listar productos con borrado logico");
-        imprimirOpcionMenu("8", "Revertir borrado logico de producto");
-        System.out.println(SEPARADOR_MENU);
-        imprimirOpcionMenu("0", "Salir");
-        System.out.println(SEPARADOR_MENU);
-    }
-
-    private static void imprimirOpcionMenu(String opcion, String descripcion) {
-        System.out.printf("  %s) %-50s%n", opcion, descripcion);
-    }
-
-    private static void imprimirTitulo(String titulo) {
-        System.out.println();
-        System.out.println(SEPARADOR_MENU);
-        System.out.println(titulo);
-        System.out.println(SEPARADOR_MENU);
-    }
-
-    private static void imprimirSubtitulo(String titulo) {
-        System.out.println();
-        System.out.println(titulo);
-        System.out.println(SEPARADOR_MENU);
-    }
-
-    private static void imprimirDato(String etiqueta, Object valor) {
-        System.out.printf("  %-35s %s%n", etiqueta + ":", valor);
-    }
-
-    private static void imprimirMensaje(String mensaje) {
-        System.out.println(PREFIJO_MENSAJE + mensaje);
-    }
-
-    private static void imprimirError(String mensaje) {
-        System.out.println(PREFIJO_ERROR + mensaje);
-    }
-
-    private static String prompt(String etiqueta) {
-        return PREFIJO_MENSAJE + etiqueta + ": ";
+        System.out.println(SEPARADOR);
+        imprimirOpcion("1", "Mostrar estado");
+        imprimirOpcion("2", "Borrar base local y reinstanciar semilla");
+        imprimirOpcion("3", "Actualizar " + CANTIDAD_PRODUCTOS_A_ACTUALIZAR + " productos");
+        imprimirOpcion("4", "Buscar usuario por id");
+        imprimirOpcion("5", "Buscar usuario por mail parcial");
+        imprimirOpcion("6", "Borrar 1 producto");
+        imprimirOpcion("7", "Listar productos con borrado logico");
+        imprimirOpcion("8", "Revertir borrado logico de producto");
+        System.out.println(SEPARADOR);
+        imprimirOpcion("0", "Salir");
+        System.out.println(SEPARADOR);
     }
 
     private static void buscarUsuarioPorId(
@@ -292,7 +265,7 @@ public class Main {
     private static CampoProductoEditable leerCampoProductoEditable(EntradaValidada entradaValidada) {
         imprimirSubtitulo("CAMPO A EDITAR");
         CAMPOS_PRODUCTO_EDITABLES.forEach(campo ->
-                imprimirOpcionMenu(campo.opcion(), campo.nombre())
+                imprimirOpcion(campo.opcion(), campo.nombre())
         );
         Set<String> opciones = new HashSet<>();
         CAMPOS_PRODUCTO_EDITABLES.forEach(campo -> opciones.add(campo.opcion()));
@@ -389,7 +362,7 @@ public class Main {
         imprimirSubtitulo("CATEGORIAS DISPONIBLES");
         categorias.forEach(categoria -> {
             idsCategorias.add(categoria.id());
-            imprimirOpcionMenu(String.valueOf(categoria.id()), categoria.nombre());
+            imprimirOpcion(String.valueOf(categoria.id()), categoria.nombre());
         });
 
         imprimirDato("Valor actual", contexto.producto().categoria());
