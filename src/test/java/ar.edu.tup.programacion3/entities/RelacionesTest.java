@@ -2,6 +2,7 @@ package ar.edu.tup.programacion3.entities;
 
 import ar.edu.tup.programacion3.enums.Estado;
 import ar.edu.tup.programacion3.enums.FormaPago;
+import ar.edu.tup.programacion3.interfaces.Calculable;
 import ar.edu.tup.programacion3.seed.DatosSemilla;
 import ar.edu.tup.programacion3.seed.DatosSemillaFactory;
 import org.junit.jupiter.api.Test;

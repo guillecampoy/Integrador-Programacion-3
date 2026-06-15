@@ -2,6 +2,7 @@ package ar.edu.tup.programacion3.entities;
 
 import ar.edu.tup.programacion3.enums.Estado;
 import ar.edu.tup.programacion3.enums.FormaPago;
+import ar.edu.tup.programacion3.interfaces.Calculable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
