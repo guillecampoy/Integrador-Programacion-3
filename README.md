@@ -2,7 +2,16 @@
 
 Trabajo practico de Programacion III orientado a persistir el modelo de dominio con JPA e Hibernate.
 
-La consigna se encuentra en [docs/TP - JPA.pdf](docs/TP%20-%20JPA.pdf).
+La consigna se encuentra en [docs/TP - JPA.pdf](docs/TP%20-%20JPA.pdf), que se toma como fuente absoluta del entregable.
+
+## Alcance de esta version
+
+- Se reviso la implementacion contra los puntos expresados en `docs/TP - JPA.pdf`.
+- No se modifico [docs/diagrama.puml](docs/diagrama.puml).
+- El UML se mantiene como diagrama representativo del dominio: no incluye menus, consola, persistencia auxiliar ni helpers.
+- No se alteraron las relaciones entre clases alcanzadas por el UML sin confirmacion explicita.
+- La verificacion final se ejecuto con `./gradlew build`.
+- Las entidades usan igualdad basada en `id` no nulo y validaciones basicas en setters para proteger datos editables.
 
 ## Objetivo
 
@@ -45,7 +54,7 @@ La unidad de persistencia indicada por la consigna es:
 <persistence-unit name="miUnidad" transaction-type="RESOURCE_LOCAL">
 ```
 
-La base de datos sugerida es H2 en archivo:
+La base de datos sugerida por la consigna es H2 en archivo. La aplicacion usa la misma base local y agrega `AUTO_SERVER=TRUE` para permitir conectarse desde la consola web de H2 mientras el programa esta en ejecucion:
 
 ```text
 jdbc:h2:file:./data/jpa_db;AUTO_SERVER=TRUE
@@ -55,9 +64,24 @@ La carpeta `data/` no se versiona. La aplicacion genera nuevamente la base local
 
 Las clases del dominio deben anotarse como entidades JPA y registrar sus relaciones correspondientes.
 
+## Integridad de entidades
+
+La clase `Base` centraliza reglas compartidas:
+
+- `equals` compara entidades de la misma clase concreta usando `id` no nulo.
+- `hashCode` se basa en la clase concreta para mantener consistencia con entidades JPA.
+- `createdAt` y otros campos mutables no participan en la igualdad.
+- El setter de `id` rechaza valores menores o iguales a 0.
+
+Las entidades concretas agregan validaciones basicas en setters para evitar textos vacios, numeros negativos, precios no positivos, valores booleanos nulos y detalles de pedido sin producto o sin cantidad valida.
+
+`DetallePedido` usa el `Producto` referenciado como identidad logica. Si se agrega el mismo producto mas de una vez al mismo `Pedido`, se conserva un unico detalle y se acumulan cantidad, subtotal y total.
+
 ## Modelo del proyecto
 
 El diagrama del modelo se encuentra en [docs/diagrama.puml](docs/diagrama.puml).
+
+El diagrama se conserva acotado a clases representativas del modelo y sus relaciones principales. Las clases de menu, consola, persistencia inicial, validacion de entrada y otros helpers no forman parte del UML para mantenerlo enfocado en el dominio pedido por el TP.
 
 Entidades del dominio:
 
