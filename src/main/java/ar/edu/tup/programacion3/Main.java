@@ -1,58 +1,69 @@
 package ar.edu.tup.programacion3;
 
-import ar.edu.tup.programacion3.entities.Pedido;
-import ar.edu.tup.programacion3.entities.Producto;
-import ar.edu.tup.programacion3.seed.DatosSemilla;
-import ar.edu.tup.programacion3.seed.DatosSemillaFactory;
+import ar.edu.tup.programacion3.seed.PersistenciaInicial;
+
+import java.util.Scanner;
 
 public class Main {
+    private static final String JDBC_H2_LOCAL = "jdbc:h2:file:./data/jpa_db;AUTO_SERVER=TRUE";
+
     public static void main(String[] args) {
-        DatosSemilla datos = DatosSemillaFactory.crear();
-        Pedido pedido = datos.pedidos().iterator().next();
+        try (Scanner scanner = new Scanner(System.in)) {
+            PersistenciaInicial persistenciaInicial = PersistenciaInicial.inicializar();
+            H2LocalConsole h2LocalConsole = H2LocalConsole.iniciar();
 
-        mostrarResumenDatos(datos);
-        mostrarProductosDisponibles(datos);
-        mostrarTotalPedido(pedido);
-        mostrarCantidadItemsPedido(pedido);
-        mostrarProductosConStockBajo(datos);
+            mostrarEstado(persistenciaInicial, h2LocalConsole);
+            boolean salir = false;
+            while (!salir) {
+                mostrarMenu();
+                if (!scanner.hasNextLine()) {
+                    break;
+                }
+                String opcion = scanner.nextLine().trim();
+
+                switch (opcion) {
+                    case "1" -> mostrarEstado(persistenciaInicial, h2LocalConsole);
+                    case "2" -> {
+                        h2LocalConsole.close();
+                        persistenciaInicial.close();
+                        PersistenciaInicial.borrarBaseLocal();
+                        persistenciaInicial = PersistenciaInicial.inicializar();
+                        h2LocalConsole = H2LocalConsole.iniciar();
+                        System.out.println("Base local borrada y semilla persistida nuevamente.");
+                        mostrarEstado(persistenciaInicial, h2LocalConsole);
+                    }
+                    case "0" -> salir = true;
+                    default -> System.out.println("Opcion invalida.");
+                }
+            }
+
+            h2LocalConsole.close();
+            persistenciaInicial.close();
+        }
     }
 
-    private static void mostrarResumenDatos(DatosSemilla datos) {
-        System.out.println("=== TP Programacion Funcional ===");
-        System.out.println("Usuarios: " + datos.usuarios().size());
-        System.out.println("Categorias: " + datos.categorias().size());
-        System.out.println("Productos: " + datos.productos().size());
-        System.out.println("Pedidos: " + datos.pedidos().size());
+    private static void mostrarEstado(PersistenciaInicial persistenciaInicial, H2LocalConsole h2LocalConsole) {
+        PersistenciaInicial.ResumenPersistencia resumen = persistenciaInicial.contarDatos();
+
         System.out.println();
+        System.out.println("=== TP JPA ===");
+        System.out.println("BD local existente al iniciar: " + (persistenciaInicial.isBaseLocalExistia() ? "si" : "no"));
+        System.out.println("Datos iniciales persistidos: " + (persistenciaInicial.isDatosInicialesPersistidos() ? "si" : "no"));
+        System.out.println("Usuarios: " + resumen.usuarios());
+        System.out.println("Categorias: " + resumen.categorias());
+        System.out.println("Productos: " + resumen.productos());
+        System.out.println("Pedidos: " + resumen.pedidos());
+        System.out.println("Consola H2: " + h2LocalConsole.getUrl());
+        System.out.println("JDBC URL: " + JDBC_H2_LOCAL);
+        System.out.println("Usuario: sa");
+        System.out.println("Password: <vacio>");
     }
 
-    private static void mostrarProductosDisponibles(DatosSemilla datos) {
-        System.out.println("Productos disponibles:");
-        datos.productos().stream()
-                .filter(Producto::getDisponible)
-                .forEach(producto -> System.out.println("- " + producto.getNombre()));
+    private static void mostrarMenu() {
         System.out.println();
-    }
-
-    private static void mostrarTotalPedido(Pedido pedido) {
-        pedido.calcularTotal();
-        System.out.println("Total del pedido número(id):" + pedido.getId() + " Fecha pedido: " +  pedido.getFecha() + " Importe: $" + pedido.getTotal());
-        System.out.println();
-    }
-
-    private static void mostrarCantidadItemsPedido(Pedido pedido) {
-        int cantidadItems = pedido.getDetallePedidos().stream()
-                .mapToInt(detallePedido -> detallePedido.getCantidad())
-                .sum();
-
-        System.out.println("Cantidad total de items del pedido(id):" + pedido.getId() + " Fecha pedido: " +  pedido.getFecha() + ": " + cantidadItems);
-        System.out.println();
-    }
-
-    private static void mostrarProductosConStockBajo(DatosSemilla datos) {
-        System.out.println("Productos con stock menor a 5:");
-        datos.productos().stream()
-                .filter(producto -> producto.getStock() < 5)
-                .forEach(producto -> System.out.println("- " + producto.getNombre() + " (stock: " + producto.getStock() + ")"));
+        System.out.println("1 - Mostrar estado");
+        System.out.println("2 - Borrar base local y reinstanciar semilla");
+        System.out.println("0 - Salir");
+        System.out.print("Opcion: ");
     }
 }

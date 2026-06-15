@@ -19,6 +19,7 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -30,12 +31,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class JpaIntegrationTest {
+    private static final String TEST_JDBC_URL = "jdbc:h2:mem:jpa_integration_test;DB_CLOSE_DELAY=-1";
+
     private EntityManagerFactory entityManagerFactory;
     private DatosSemilla datosSemilla;
 
     @BeforeAll
     void setUp() {
-        entityManagerFactory = Persistence.createEntityManagerFactory("miUnidad");
+        assertTrue(TEST_JDBC_URL.startsWith("jdbc:h2:mem:"));
+        assertFalse(TEST_JDBC_URL.contains("./data/jpa_db"));
+
+        entityManagerFactory = Persistence.createEntityManagerFactory(
+                "miUnidad",
+                Map.of("jakarta.persistence.jdbc.url", TEST_JDBC_URL)
+        );
         datosSemilla = DatosSemillaFactory.crear();
 
         ejecutarEnTransaccion(entityManager -> {
@@ -59,7 +68,7 @@ class JpaIntegrationTest {
     void vuelcaDatosSemillaALaBaseYValidaRelaciones() {
         assertEquals(2L, contar(Usuario.class));
         assertEquals(3L, contar(Categoria.class));
-        assertEquals(11L, contar(Producto.class));
+        assertEquals(10L, contar(Producto.class));
         assertEquals(3L, contar(Pedido.class));
 
         List<Pedido> pedidos = consultar(entityManager ->
@@ -85,7 +94,7 @@ class JpaIntegrationTest {
 
         imprimirResultado(
                 "PERSISTENCIA",
-                "usuarios=2, categorias=3, productos=11, pedidos=3, pedidosConDetalles>=2"
+                "usuarios=2, categorias=3, productos=10, pedidos=3, pedidosConDetalles>=2"
         );
     }
 
@@ -150,24 +159,24 @@ class JpaIntegrationTest {
     @Order(5)
     void borraUnProducto() {
         ejecutarEnTransaccion(entityManager -> {
-            Producto producto = entityManager.find(Producto.class, 11L);
+            Producto producto = entityManager.find(Producto.class, 10L);
             assertNotNull(producto);
             entityManager.remove(producto);
         });
 
-        assertEquals(10L, contar(Producto.class));
+        assertEquals(9L, contar(Producto.class));
         boolean productoBorrado = consultar(entityManager ->
                 entityManager.createQuery(
                                 "select p from Producto p where p.id = :id",
                                 Producto.class
                         )
-                        .setParameter("id", 11L)
+                        .setParameter("id", 10L)
                         .getResultList()
                         .isEmpty()
         );
         assertTrue(productoBorrado);
 
-        imprimirResultado("DELETE", "producto id=11 eliminado, productos restantes=10");
+        imprimirResultado("DELETE", "producto id=10 eliminado, productos restantes=9");
     }
 
     private void limpiarBase(EntityManager entityManager) {

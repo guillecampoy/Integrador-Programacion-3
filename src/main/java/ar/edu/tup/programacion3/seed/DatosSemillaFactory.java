@@ -218,19 +218,6 @@ public class DatosSemillaFactory {
                 .createdAt(LocalDateTime.now())
                 .eliminado(false)
                 .build();
-        Producto jabonTocador = Producto.builder()
-                .nombre("Jabón de manos")
-                .precio(1100.0)
-                .descripcion("Jabón neutro")
-                .imagen("jabon_tocador.jpg")
-                .disponible(true)
-                .stock(2)
-                .categoria(categorias.almacen())
-                .id(11L)
-                .createdAt(LocalDateTime.now())
-                .eliminado(false)
-                .build();
-
         productos.add(cafeMolido);
         productos.add(yerbaMate);
         productos.add(arroz);
@@ -241,7 +228,6 @@ public class DatosSemillaFactory {
         productos.add(detergente);
         productos.add(lavandina);
         productos.add(esponja);
-        productos.add(jabonTocador);
 
         categorias.almacen().addProducto(cafeMolido);
         categorias.almacen().addProducto(yerbaMate);
@@ -252,7 +238,6 @@ public class DatosSemillaFactory {
         categorias.almacen().addProducto(jugoNaranja);
         categorias.limpieza().addProducto(detergente);
         categorias.limpieza().addProducto(lavandina);
-        categorias.limpieza().addProducto(jabonTocador);
         categorias.almacen().addProducto(esponja);
 
         return new ProductosSemilla(

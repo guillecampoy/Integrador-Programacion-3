@@ -48,7 +48,7 @@ La unidad de persistencia indicada por la consigna es:
 La base de datos sugerida es H2 en archivo:
 
 ```text
-jdbc:h2:file:./data/jpa_db
+jdbc:h2:file:./data/jpa_db;AUTO_SERVER=TRUE
 ```
 
 Las clases del dominio deben anotarse como entidades JPA y registrar sus relaciones correspondientes.
@@ -97,11 +97,11 @@ La clase `DatosSemillaFactory` instancia datos en memoria que sirven como base p
 
 - 2 usuarios.
 - 3 categorias.
-- 11 productos.
+- 10 productos.
 - 3 pedidos.
 - Cada pedido tiene al menos 2 detalles.
 
-Para cumplir estrictamente con la consigna, la persistencia inicial debe guardar al menos 10 productos. El modelo actual ya supera esa cantidad.
+La persistencia inicial guarda exactamente 10 productos, segun la consigna.
 
 ## Operaciones JPA requeridas
 
@@ -123,10 +123,13 @@ La implementacion del TP debe cubrir el siguiente flujo:
 El test `JpaIntegrationTest` valida el flujo end to end solicitado por la consigna:
 
 - Crea un `EntityManagerFactory` con la unidad de persistencia `miUnidad`.
-- Usa la base H2 configurada en `persistence.xml`, creandola si no existe y reutilizandola si ya existe.
+- Sobrescribe la URL JDBC con `jdbc:h2:mem:jpa_integration_test;DB_CLOSE_DELAY=-1`.
+- Crea una base H2 en memoria para el test.
+- No usa ni modifica la base de desarrollo `data/jpa_db.mv.db`.
+- Valida explicitamente que la URL de test empiece con `jdbc:h2:mem:` y que no contenga `./data/jpa_db`.
 - Limpia las tablas del dominio antes de persistir la semilla.
 - Persiste los datos de `DatosSemillaFactory`.
-- Valida que existan 2 usuarios, 3 categorias, 11 productos y 3 pedidos.
+- Valida que existan 2 usuarios, 3 categorias, 10 productos y 3 pedidos.
 - Valida que cada pedido tenga usuario y al menos 2 detalles.
 - Valida que cada detalle referencie un producto y tenga subtotal positivo.
 - Actualiza 2 productos.
@@ -165,6 +168,27 @@ Ejecutar desde la raiz del repositorio:
 ./gradlew run
 ```
 
+Mientras el programa esta corriendo, deja disponible la consola web local de H2:
+
+```text
+URL: http://localhost:8082
+JDBC URL: jdbc:h2:file:./data/jpa_db;AUTO_SERVER=TRUE
+Usuario: sa
+Password: dejar vacio
+```
+
+El programa debe quedar abierto para conectarse desde la consola. Si se cierra con la opcion `0`, tambien se cierra la consola web.
+
+Opciones del menu:
+
+```text
+1 - Mostrar estado
+2 - Borrar base local y reinstanciar semilla
+0 - Salir
+```
+
+La opcion `2` cierra JPA y la consola H2, borra los archivos locales `data/jpa_db.mv.db`, `data/jpa_db.trace.db` y `data/jpa_db.lock.db` si existen, vuelve a crear la base y persiste otra vez la semilla inicial: 2 usuarios, 3 pedidos con al menos 2 detalles por pedido, 3 categorias y 10 productos.
+
 Compilar y ejecutar tests:
 
 ```bash
@@ -174,4 +198,8 @@ Compilar y ejecutar tests:
 ## Salida esperada
 
 Al ejecutar `./gradlew run`, el programa muestra:
-COMPLETAR!!
+- Si la base H2 local existia al iniciar.
+- Si se persistieron los datos iniciales.
+- El total actual de usuarios, categorias, productos y pedidos.
+- Los datos de conexion para la consola web H2 local.
+- El menu con opcion explicita de salida.
