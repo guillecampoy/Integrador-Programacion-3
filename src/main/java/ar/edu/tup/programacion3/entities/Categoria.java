@@ -14,10 +14,8 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 @ToString
 public class Categoria extends Base {
-    @EqualsAndHashCode.Include
     private String nombre;
     private String descripcion;
     @Builder.Default

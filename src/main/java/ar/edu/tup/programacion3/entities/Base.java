@@ -6,6 +6,7 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @MappedSuperclass
 @NoArgsConstructor
@@ -14,12 +15,27 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @ToString
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public abstract class Base {
     @Id
-    @EqualsAndHashCode.Include
     private Long id;
     private Boolean eliminado;
     private LocalDateTime createdAt;
 
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (object == null || getClass() != object.getClass()) {
+            return false;
+        }
+
+        Base base = (Base) object;
+        return id != null && Objects.equals(id, base.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }

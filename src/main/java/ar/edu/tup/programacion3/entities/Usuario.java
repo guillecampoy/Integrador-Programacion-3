@@ -18,11 +18,9 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public class Usuario extends Base {
     private String nombre;
     private String apellido;
-    @EqualsAndHashCode.Include
     private String mail;
     private String celular;
     private String contrasenia;

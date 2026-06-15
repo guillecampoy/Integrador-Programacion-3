@@ -23,17 +23,13 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 @ToString
 public class Pedido extends Base implements Calculable {
-    @EqualsAndHashCode.Include
     private LocalDate fecha;
-    @EqualsAndHashCode.Include
     @Enumerated(EnumType.STRING)
     private Estado estado;
     @Builder.Default
     private Double total = 0.0;
-    @EqualsAndHashCode.Include
     @Enumerated(EnumType.STRING)
     private FormaPago formaPago;
     @ManyToOne

@@ -7,9 +7,13 @@ import ar.edu.tup.programacion3.seed.DatosSemillaFactory;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -109,6 +113,36 @@ class RelacionesTest {
         datosSemilla.categorias().forEach(categoria ->
                 assertTrue(categoria.getProductos().size() >= 1)
         );
+    }
+
+    @Test
+    void igualdadUsaIdYNoCamposMutablesNiCreatedAt() {
+        Usuario usuario = Usuario.builder()
+                .id(48L)
+                .mail("usuario@test.com")
+                .createdAt(LocalDateTime.of(2026, 5, 10, 12, 0))
+                .build();
+        Usuario mismoUsuario = Usuario.builder()
+                .id(48L)
+                .mail("mail.actualizado@test.com")
+                .createdAt(LocalDateTime.of(2026, 5, 10, 12, 1))
+                .build();
+
+        assertEquals(usuario, mismoUsuario);
+        assertEquals(usuario.hashCode(), mismoUsuario.hashCode());
+    }
+
+    @Test
+    void entidadesSinIdNoSonIgualesAunqueSeanDelMismoTipo() {
+        Producto cafe = crearProducto("Cafe molido", 3200.0);
+        Producto otroCafe = crearProducto("Cafe molido", 3200.0);
+        Set<Producto> productos = new HashSet<>();
+
+        productos.add(cafe);
+        productos.add(otroCafe);
+
+        assertNotEquals(cafe, otroCafe);
+        assertEquals(2, productos.size());
     }
 
     private Pedido crearPedidoSinUsuario() {
