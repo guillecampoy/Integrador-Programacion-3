@@ -14,11 +14,11 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class DatosSemillaFactory {
-        private DatosSemillaFactory() {
+    private DatosSemillaFactory() {
 
-        }
+    }
 
-public static DatosSemilla crear() {
+    public static DatosSemilla crear() {
         UsuariosSemilla usuarios = crearUsuarios();
         CategoriasSemilla categorias = crearCategorias();
         ProductosSemilla productos = crearProductos(categorias);
@@ -33,9 +33,9 @@ public static DatosSemilla crear() {
                 productos.cafeMolido(),
                 productoParaComparar
         );
-}
+    }
 
-private static UsuariosSemilla crearUsuarios() {
+    private static UsuariosSemilla crearUsuarios() {
         Set<Usuario> usuarios = new LinkedHashSet<>();
         Usuario ana = Usuario.builder()
                 .nombre("Ana")
@@ -64,9 +64,9 @@ private static UsuariosSemilla crearUsuarios() {
         usuarios.add(bruno);
 
         return new UsuariosSemilla(usuarios, ana, bruno);
-}
+    }
 
-private static CategoriasSemilla crearCategorias() {
+    private static CategoriasSemilla crearCategorias() {
         Set<Categoria> categorias = new LinkedHashSet<>();
         Categoria almacen = Categoria.builder()
                 .nombre("Almacen")
@@ -94,9 +94,9 @@ private static CategoriasSemilla crearCategorias() {
         categorias.add(limpieza);
 
         return new CategoriasSemilla(categorias, almacen, bebidas, limpieza);
-}
+    }
 
-private static ProductosSemilla crearProductos(CategoriasSemilla categorias) {
+    private static ProductosSemilla crearProductos(CategoriasSemilla categorias) {
         Set<Producto> productos = new LinkedHashSet<>();
         Producto cafeMolido = Producto.builder()
                 .nombre("Cafe molido")
@@ -218,19 +218,6 @@ private static ProductosSemilla crearProductos(CategoriasSemilla categorias) {
                 .createdAt(LocalDateTime.now())
                 .eliminado(false)
                 .build();
-        Producto jabonTocador = Producto.builder()
-                .nombre("Jabón de manos")
-                .precio(1100.0)
-                .descripcion("Jabón neutro")
-                .imagen("jabon_tocador.jpg")
-                .disponible(true)
-                .stock(2)
-                .categoria(categorias.almacen())
-                .id(11L)
-                .createdAt(LocalDateTime.now())
-                .eliminado(false)
-                .build();
-
         productos.add(cafeMolido);
         productos.add(yerbaMate);
         productos.add(arroz);
@@ -241,7 +228,6 @@ private static ProductosSemilla crearProductos(CategoriasSemilla categorias) {
         productos.add(detergente);
         productos.add(lavandina);
         productos.add(esponja);
-        productos.add(jabonTocador);
 
         categorias.almacen().addProducto(cafeMolido);
         categorias.almacen().addProducto(yerbaMate);
@@ -252,7 +238,6 @@ private static ProductosSemilla crearProductos(CategoriasSemilla categorias) {
         categorias.almacen().addProducto(jugoNaranja);
         categorias.limpieza().addProducto(detergente);
         categorias.limpieza().addProducto(lavandina);
-        categorias.limpieza().addProducto(jabonTocador);
         categorias.almacen().addProducto(esponja);
 
         return new ProductosSemilla(
@@ -266,9 +251,9 @@ private static ProductosSemilla crearProductos(CategoriasSemilla categorias) {
                 detergente,
                 lavandina
         );
-}
+    }
 
-private static Set<Pedido> crearPedidos(UsuariosSemilla usuarios, ProductosSemilla productos) {
+    private static Set<Pedido> crearPedidos(UsuariosSemilla usuarios, ProductosSemilla productos) {
         Set<Pedido> pedidos = new LinkedHashSet<>();
 
         Pedido pedido1 = crearPedido(1L, LocalDate.of(2026, 5, 10), Estado.CONFIRMADO, FormaPago.TARJETA, usuarios.ana());
@@ -288,10 +273,22 @@ private static Set<Pedido> crearPedidos(UsuariosSemilla usuarios, ProductosSemil
         pedido3.addDetallePedido(productos.lavandina(), 1);
         pedidos.add(pedido3);
 
-        return pedidos;
-}
+        asignarIdsDetalles(pedidos);
 
-private static Pedido crearPedido(Long id, LocalDate fecha, Estado estado, FormaPago formaPago, Usuario usuario) {
+        return pedidos;
+    }
+
+    private static void asignarIdsDetalles(Set<Pedido> pedidos) {
+        long id = 1L;
+        for (Pedido pedido : pedidos) {
+            for (var detallePedido : pedido.getDetallePedidos()) {
+                detallePedido.setId(id);
+                id++;
+            }
+        }
+    }
+
+    private static Pedido crearPedido(Long id, LocalDate fecha, Estado estado, FormaPago formaPago, Usuario usuario) {
         Pedido pedido = Pedido.builder()
                 .id(id)
                 .fecha(fecha)
@@ -303,9 +300,9 @@ private static Pedido crearPedido(Long id, LocalDate fecha, Estado estado, Forma
                 .build();
         usuario.addPedido(pedido);
         return pedido;
-}
+    }
 
-private static Producto crearProductoEquivalenteAlCafeMolido() {
+    private static Producto crearProductoEquivalenteAlCafeMolido() {
         Categoria categoriaEquivalente = Categoria.builder()
                 .nombre("Almacen")
                 .descripcion("Productos secos y envasados")
@@ -325,24 +322,24 @@ private static Producto crearProductoEquivalenteAlCafeMolido() {
                 .createdAt(LocalDateTime.now())
                 .eliminado(false)
                 .build();
-}
+    }
 
-private record UsuariosSemilla(Set<Usuario> todos, Usuario ana, Usuario bruno) {
-}
+    private record UsuariosSemilla(Set<Usuario> todos, Usuario ana, Usuario bruno) {
+    }
 
-private record CategoriasSemilla(Set<Categoria> todas, Categoria almacen, Categoria bebidas, Categoria limpieza) {
-}
+    private record CategoriasSemilla(Set<Categoria> todas, Categoria almacen, Categoria bebidas, Categoria limpieza) {
+    }
 
-private record ProductosSemilla(
-        Set<Producto> todos,
-        Producto cafeMolido,
-        Producto yerbaMate,
-        Producto arroz,
-        Producto fideos,
-        Producto gaseosa,
-        Producto aguaMineral,
-        Producto detergente,
-        Producto lavandina
-) {
-}
+    private record ProductosSemilla(
+            Set<Producto> todos,
+            Producto cafeMolido,
+            Producto yerbaMate,
+            Producto arroz,
+            Producto fideos,
+            Producto gaseosa,
+            Producto aguaMineral,
+            Producto detergente,
+            Producto lavandina
+    ) {
+    }
 }

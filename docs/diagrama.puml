@@ -80,66 +80,6 @@ class UsuarioDTO <<record>> {
     - formatCreatedAt(): String
 }
 
-class DatosSemilla <<record>> {
-    - usuarios: Set<Usuario>
-    - categorias: Set<Categoria>
-    - productos: Set<Producto>
-    - pedidos: Set<Pedido>
-    - productoParaMostrar: Producto
-    - productoParaComparar: Producto
-    + usuarios(): Set<Usuario>
-    + categorias(): Set<Categoria>
-    + productos(): Set<Producto>
-    + pedidos(): Set<Pedido>
-    + productoParaMostrar(): Producto
-    + productoParaComparar(): Producto
-}
-
-class DatosSemillaFactory {
-    - DatosSemillaFactory()
-    + crear(): DatosSemilla
-    - crearUsuarios(): UsuariosSemilla
-    - crearCategorias(): CategoriasSemilla
-    - crearProductos(CategoriasSemilla): ProductosSemilla
-    - crearPedidos(UsuariosSemilla, ProductosSemilla): Set<Pedido>
-    - crearPedido(LocalDate, Estado, FormaPago, Usuario): Pedido
-    - crearProductoEquivalenteAlCafeMolido(): Producto
-}
-
-class UsuariosSemilla <<record>> {
-    - todos: Set<Usuario>
-    - ana: Usuario
-    - bruno: Usuario
-}
-
-class CategoriasSemilla <<record>> {
-    - todas: Set<Categoria>
-    - almacen: Categoria
-    - bebidas: Categoria
-    - limpieza: Categoria
-}
-
-class ProductosSemilla <<record>> {
-    - todos: Set<Producto>
-    - cafeMolido: Producto
-    - yerbaMate: Producto
-    - arroz: Producto
-    - fideos: Producto
-    - gaseosa: Producto
-    - aguaMineral: Producto
-    - detergente: Producto
-    - lavandina: Producto
-}
-
-class Main {
-    + main(String[]): void
-    - mostrarResumenDatos(DatosSemilla): void
-    - mostrarProductosDisponibles(DatosSemilla): void
-    - mostrarTotalPedido(Pedido): void
-    - mostrarCantidadItemsPedido(Pedido): void
-    - mostrarProductosConStockBajo(DatosSemilla): void
-}
-
 enum FormaPago {
     TARJETA
     TRANSFERENCIA
@@ -163,28 +103,10 @@ Base <|-- Categoria
 Base <|-- Producto
 Base <|-- Pedido
 Base <|-- DetallePedido
-
 Calculable <|.. Pedido
-
 Usuario --> "1..m" Pedido
 Pedido *-- "1..m" DetallePedido
 DetallePedido "m" --> "1" Producto
 Categoria o-- "1..m" Producto
 UsuarioDTO ..> Usuario
-DatosSemilla o-- "0..*" Usuario
-DatosSemilla o-- "0..*" Categoria
-DatosSemilla o-- "0..*" Producto
-DatosSemilla o-- "0..*" Pedido
-DatosSemillaFactory ..> DatosSemilla
-DatosSemillaFactory ..> Usuario
-DatosSemillaFactory ..> Categoria
-DatosSemillaFactory ..> Producto
-DatosSemillaFactory ..> Pedido
-DatosSemillaFactory ..> UsuariosSemilla
-DatosSemillaFactory ..> CategoriasSemilla
-DatosSemillaFactory ..> ProductosSemilla
-Main ..> DatosSemilla
-Main ..> DatosSemillaFactory
-Main ..> Pedido
-
 @enduml

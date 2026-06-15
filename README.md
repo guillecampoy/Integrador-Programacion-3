@@ -1,47 +1,89 @@
-# TP Programacion Funcional
+# TP JPA
 
-Trabajo practico de Programacion III sobre programacion funcional en Java. El proyecto toma el modelo de clases de entregas anteriores y aplica expresiones lambda y Streams para procesar colecciones del dominio.
+Trabajo practico de Programacion III orientado a persistir el modelo de dominio con JPA e Hibernate.
+
+La consigna se encuentra en [docs/TP - JPA.pdf](docs/TP%20-%20JPA.pdf), que se toma como fuente absoluta del entregable.
+
+## Alcance de esta version
+
+- Se reviso la implementacion contra los puntos expresados en `docs/TP - JPA.pdf`.
+- No se modifico [docs/diagrama.puml](docs/diagrama.puml).
+- El UML se mantiene como diagrama representativo del dominio: no incluye menus, consola, persistencia auxiliar ni helpers.
+- No se alteraron las relaciones entre clases alcanzadas por el UML sin confirmacion explicita.
+- La verificacion final se ejecuto con `./gradlew build`.
+- Las entidades usan igualdad basada en `id` no nulo y validaciones basicas en setters para proteger datos editables.
+
+## Objetivo
+
+Disenar e implementar un modelo de dominio persistente utilizando JPA sobre las clases generadas en la practica de Lombok y DTO.
+
+El trabajo debe permitir:
+
+- Persistir objetos en una base de datos relacional.
+- Comprender el ciclo de vida de una entidad.
+- Realizar operaciones CRUD sobre el modelo.
 
 ## Consigna
 
-La consigna original se encuentra en [docs/Trabajo Practico Programacion Funcional.pdf](docs/Trabajo%20Pr%C3%A1ctico%20Programaci%C3%B3n%20Funcional.pdf). Pide resolver:
+Segun el documento del TP, el proyecto debe incorporar:
 
-- Desarrollar un metodo en `Pedido` que calcule el total del pedido.
-- Mostrar por consola los productos disponibles.
-- Mostrar por consola la cantidad total de items que tiene un pedido.
-- Detectar productos que tengan menos de 5 unidades en stock.
+- Libreria de Hibernate.
+- Archivo `persistence.xml`.
+- Anotaciones JPA para entidades, ids y relaciones.
+- Persistencia inicial de datos:
+  - 2 usuarios.
+  - 3 pedidos, con al menos 2 detalles por pedido.
+  - 3 categorias.
+  - 10 productos.
+- Actualizacion de al menos 2 productos.
+- Busqueda de usuario por id.
+- Busqueda de usuario por mail.
+- Borrado de 1 producto.
 
-## Implementacion final
+## Estructura esperada para JPA
 
-El metodo `Pedido.calcularTotal()` implementa la interfaz `Calculable` y calcula el total con Stream:
+El archivo de configuracion de persistencia debe ubicarse en:
 
-```java
-this.total = detallePedidos.stream()
-        .mapToDouble(DetallePedido::getSubtotal)
-        .sum();
+```text
+src/main/resources/META-INF/persistence.xml
 ```
 
-La clase `Main` instancia los datos semilla y ejecuta directamente las operaciones pedidas:
+La unidad de persistencia indicada por la consigna es:
 
-- `mostrarProductosDisponibles(DatosSemilla)`: filtra productos con `Producto::getDisponible`.
-- `mostrarTotalPedido(Pedido)`: invoca `pedido.calcularTotal()` y muestra el total.
-- `mostrarCantidadItemsPedido(Pedido)`: suma las cantidades de los detalles con `mapToInt(...).sum()`.
-- `mostrarProductosConStockBajo(DatosSemilla)`: filtra productos con `stock < 5`.
+```xml
+<persistence-unit name="miUnidad" transaction-type="RESOURCE_LOCAL">
+```
 
-Los datos semilla se crean en `DatosSemillaFactory`:
+La base de datos sugerida por la consigna es H2 en archivo. La aplicacion usa la misma base local y agrega `AUTO_SERVER=TRUE` para permitir conectarse desde la consola web de H2 mientras el programa esta en ejecucion:
 
-- 2 usuarios.
-- 3 categorias.
-- 10 productos.
-- 3 pedidos.
-- Cada pedido tiene al menos 2 detalles.
-- Al menos un producto tiene stock menor a 5 para validar la ultima operacion.
+```text
+jdbc:h2:file:./data/jpa_db;AUTO_SERVER=TRUE
+```
+
+La carpeta `data/` no se versiona. La aplicacion genera nuevamente la base local cuando no detecta `data/jpa_db.mv.db`.
+
+Las clases del dominio deben anotarse como entidades JPA y registrar sus relaciones correspondientes.
+
+## Integridad de entidades
+
+La clase `Base` centraliza reglas compartidas:
+
+- `equals` compara entidades de la misma clase concreta usando `id` no nulo.
+- `hashCode` se basa en la clase concreta para mantener consistencia con entidades JPA.
+- `createdAt` y otros campos mutables no participan en la igualdad.
+- El setter de `id` rechaza valores menores o iguales a 0.
+
+Las entidades concretas agregan validaciones basicas en setters para evitar textos vacios, numeros negativos, precios no positivos, valores booleanos nulos y detalles de pedido sin producto o sin cantidad valida.
+
+`DetallePedido` usa el `Producto` referenciado como identidad logica. Si se agrega el mismo producto mas de una vez al mismo `Pedido`, se conserva un unico detalle y se acumulan cantidad, subtotal y total.
 
 ## Modelo del proyecto
 
-El diagrama actualizado esta en [docs/diagrama.puml](docs/diagrama.puml). Incluye las clases, records, enums, atributos, metodos explicitos y relaciones actuales del proyecto.
+El diagrama del modelo se encuentra en [docs/diagrama.puml](docs/diagrama.puml).
 
-Entidades:
+El diagrama se conserva acotado a clases representativas del modelo y sus relaciones principales. Las clases de menu, consola, persistencia inicial, validacion de entrada y otros helpers no forman parte del UML para mantenerlo enfocado en el dominio pedido por el TP.
+
+Entidades del dominio:
 
 - `Base`
 - `Usuario`
@@ -50,15 +92,14 @@ Entidades:
 - `Pedido`
 - `DetallePedido`
 
-Interfaz:
+Relaciones principales:
 
-- `Calculable`
-
-DTO y datos semilla:
-
-- `UsuarioDTO`
-- `DatosSemilla`
-- `DatosSemillaFactory`
+- `Usuario` tiene una coleccion de `Pedido`.
+- `Pedido` pertenece a un `Usuario`.
+- `Pedido` tiene una coleccion de `DetallePedido`.
+- `DetallePedido` referencia un `Producto`.
+- `Producto` pertenece a una `Categoria`.
+- `Categoria` tiene una coleccion de `Producto`.
 
 Enums:
 
@@ -66,13 +107,88 @@ Enums:
 - `FormaPago`
 - `Rol`
 
+DTO y datos semilla:
+
+- `UsuarioDTO`
+- `DatosSemilla`
+- `DatosSemillaFactory`
+
+Interfaz:
+
+- `Calculable`
+
+## Datos de prueba actuales
+
+La clase `DatosSemillaFactory` instancia datos en memoria que sirven como base para el TP JPA:
+
+- 2 usuarios.
+- 3 categorias.
+- 10 productos.
+- 3 pedidos.
+- Cada pedido tiene al menos 2 detalles.
+
+La persistencia inicial guarda exactamente 10 productos, segun la consigna.
+
+## Operaciones JPA requeridas
+
+La implementacion del TP debe cubrir el siguiente flujo:
+
+1. Crear un `EntityManagerFactory` usando la unidad `miUnidad`.
+2. Crear un `EntityManager`.
+3. Abrir una transaccion.
+4. Persistir usuarios, categorias, productos, pedidos y detalles.
+5. Confirmar la transaccion.
+6. Actualizar al menos 2 productos.
+7. Buscar un usuario por `id`.
+8. Buscar un usuario por `mail`.
+9. Borrar 1 producto.
+10. Cerrar `EntityManager` y `EntityManagerFactory`.
+
+## Test de integracion JPA
+
+El test `JpaIntegrationTest` valida el flujo end to end solicitado por la consigna:
+
+- Crea un `EntityManagerFactory` con la unidad de persistencia `miUnidad`.
+- Sobrescribe la URL JDBC con `jdbc:h2:mem:jpa_integration_test;DB_CLOSE_DELAY=-1`.
+- Crea una base H2 en memoria para el test.
+- No usa ni modifica la base de desarrollo `data/jpa_db.mv.db`.
+- Valida explicitamente que la URL de test empiece con `jdbc:h2:mem:` y que no contenga `./data/jpa_db`.
+- Limpia las tablas del dominio antes de persistir la semilla.
+- Persiste los datos de `DatosSemillaFactory`.
+- Valida que existan 2 usuarios, 3 categorias, 10 productos y 3 pedidos.
+- Valida que cada pedido tenga usuario y al menos 2 detalles.
+- Valida que cada detalle referencie un producto y tenga subtotal positivo.
+- Actualiza 2 productos.
+- Busca un usuario por `id`.
+- Busca un usuario por `mail`.
+- Borra 1 producto.
+- Cierra los recursos de JPA al finalizar.
+
+El test `PersistenciaInicialTest` valida especificamente que, si la base H2 local no existe, el inicializador crea una base nueva y persiste la semilla. Para no tocar la base de desarrollo, usa un directorio temporal de JUnit y una URL `jdbc:h2:file:` apuntando a ese temporal.
+
+## Conclusiones esperadas
+
+El test de integracion deja cubiertos los puntos finales de la consigna:
+
+- Persistir objetos en base de datos.
+- Comprender el ciclo de vida de una entidad mediante persistencia, busqueda, actualizacion y borrado.
+- Comprender operaciones CRUD sobre entidades JPA.
+
+## Dependencias esperadas
+
+Ademas de Lombok y JUnit, el proyecto debe incluir dependencias para:
+
+- Hibernate ORM.
+- Jakarta Persistence API.
+- H2 Database.
+
 ## Ejecucion
 
 Requisitos:
 
-- Java instalado
-- Gradle Wrapper incluido en el proyecto
-- Lombok configurado como dependencia del proyecto
+- Java instalado.
+- Gradle Wrapper incluido en el proyecto.
+- Dependencias configuradas en `build.gradle`.
 
 Ejecutar desde la raiz del repositorio:
 
@@ -80,7 +196,56 @@ Ejecutar desde la raiz del repositorio:
 ./gradlew run
 ```
 
-Compilar el proyecto:
+Mientras el programa esta corriendo, deja disponible la consola web local de H2:
+
+```text
+URL: http://localhost:8082
+JDBC URL: jdbc:h2:file:./data/jpa_db;AUTO_SERVER=TRUE
+Usuario: sa
+Password: dejar vacio
+```
+
+El programa debe quedar abierto para conectarse desde la consola. Si se cierra con la opcion `0`, tambien se cierra la consola web.
+
+Opciones del menu:
+
+```text
+1 - Mostrar estado
+2 - Borrar base local y reinstanciar semilla
+3 - Actualizar 2 productos
+4 - Buscar usuario por id
+5 - Buscar usuario por mail parcial
+6 - Borrar 1 producto
+7 - Listar productos con borrado logico
+8 - Revertir borrado logico de producto
+0 - Salir
+```
+
+La opcion `2` cierra JPA y la consola H2, borra los archivos locales `data/jpa_db.mv.db`, `data/jpa_db.trace.db` y `data/jpa_db.lock.db` si existen, vuelve a crear la base y persiste otra vez la semilla inicial: 2 usuarios, 3 pedidos con al menos 2 detalles por pedido, 3 categorias y 10 productos.
+
+La opcion `3` obliga a actualizar 2 productos distintos. Para cada producto:
+
+- Muestra la lista de productos disponibles.
+- Pide un id existente y no repetido.
+- Construye dinamicamente el menu de atributos editables.
+- Permite editar `nombre`, `precio`, `descripcion`, `stock`, `imagen`, `disponible` o `categoria`.
+- No tiene opcion por defecto: el usuario debe elegir explicitamente que atributo actualizar.
+- Muestra el valor actual o el detalle correspondiente antes de pedir el nuevo valor.
+- Valida estrictamente las entradas: textos no vacios, stock entero mayor o igual a 0, precio decimal mayor o igual a 0.01, disponible como `si/no`, `s/n` o `true/false` y categoria existente.
+
+La validacion de entradas esta centralizada en `EntradaValidada` para reutilizarla en las proximas opciones del menu.
+
+La opcion `4` busca un usuario por id. Valida que el id sea numerico y mayor a 0, y muestra el detalle del usuario si existe.
+
+La opcion `5` busca usuarios por coincidencia parcial de mail usando `like`. Permite ingresar fragmentos como `gmail`, `bruno` o `@gmail.com`; valida que el texto no este vacio ni tenga espacios y muestra todos los usuarios encontrados.
+
+La opcion `6` borra logicamente 1 producto. El producto no se elimina fisicamente de la base: se marca `eliminado = true`, desaparece de los listados activos y sigue existiendo en la tabla `Producto`.
+
+La opcion `7` lista solamente productos con borrado logico (`eliminado = true`).
+
+La opcion `8` revierte el borrado logico de un producto. Solo permite elegir ids de productos que ya esten marcados con `eliminado = true`; al restaurarlo vuelve a `eliminado = false` y reaparece en los listados activos.
+
+Compilar y ejecutar tests:
 
 ```bash
 ./gradlew build
@@ -89,9 +254,9 @@ Compilar el proyecto:
 ## Salida esperada
 
 Al ejecutar `./gradlew run`, el programa muestra:
-
-- Cantidad de usuarios, categorias, productos y pedidos instanciados.
-- Productos disponibles.
-- Total calculado de un pedido.
-- Cantidad total de items de ese pedido.
-- Productos con stock menor a 5.
+- Si la base H2 local existia al iniciar.
+- Si se persistieron los datos iniciales.
+- El total actual de usuarios, categorias y pedidos.
+- Productos activos y productos eliminados en lineas separadas.
+- Los datos de conexion para la consola web H2 local.
+- El menu con opcion explicita de salida.
