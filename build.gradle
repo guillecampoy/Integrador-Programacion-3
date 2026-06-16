@@ -11,7 +11,7 @@ repositories {
 }
 
 application {
-    mainClass = 'ar.edu.tup.programacion3.Main'
+    mainClass = 'com.tp.jpa.Main'
 }
 
 run {
