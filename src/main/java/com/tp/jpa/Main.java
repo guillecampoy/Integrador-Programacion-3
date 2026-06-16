@@ -1,8 +1,10 @@
 package com.tp.jpa;
 
 import ar.edu.tup.programacion3.entities.Categoria;
+import ar.edu.tup.programacion3.entities.Producto;
 import ar.edu.tup.programacion3.utils.EntradaValidada;
 import com.tp.jpa.repository.CategoriaRepository;
+import com.tp.jpa.repository.ProductoRepository;
 import com.tp.jpa.util.JPAUtil;
 
 import java.time.LocalDateTime;
@@ -21,22 +23,25 @@ public class Main {
     private final Scanner scanner;
     private final EntradaValidada entrada;
     private final CategoriaRepository categoriaRepository;
+    private final ProductoRepository productoRepository;
 
-    public Main(Scanner scanner, CategoriaRepository categoriaRepository) {
+    public Main(Scanner scanner, CategoriaRepository categoriaRepository, ProductoRepository productoRepository) {
         this.scanner = scanner;
         this.entrada = new EntradaValidada(scanner);
         this.categoriaRepository = categoriaRepository;
+        this.productoRepository = productoRepository;
     }
 
-    Main(EntradaValidada entrada, CategoriaRepository categoriaRepository) {
+    Main(EntradaValidada entrada, CategoriaRepository categoriaRepository, ProductoRepository productoRepository) {
         this.scanner = null;
         this.entrada = entrada;
         this.categoriaRepository = categoriaRepository;
+        this.productoRepository = productoRepository;
     }
 
     public static void main(String[] args) {
         try (Scanner scanner = new Scanner(System.in)) {
-            new Main(scanner, new CategoriaRepository()).ejecutar();
+            new Main(scanner, new CategoriaRepository(), new ProductoRepository()).ejecutar();
         } finally {
             JPAUtil.close();
         }
@@ -46,10 +51,24 @@ public class Main {
         boolean salir = false;
         while (!salir) {
             mostrarMenuPrincipal();
-            String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1"));
+            String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2"));
             switch (opcion) {
                 case "1" -> menuCategorias();
+                case "2" -> menuProductos();
                 case "0" -> salir = true;
+                default -> imprimirError("Opcion invalida.");
+            }
+        }
+    }
+
+    private void menuProductos() {
+        boolean volver = false;
+        while (!volver) {
+            mostrarMenuProductos();
+            String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1"));
+            switch (opcion) {
+                case "1" -> altaProducto();
+                case "0" -> volver = true;
                 default -> imprimirError("Opcion invalida.");
             }
         }
@@ -167,6 +186,67 @@ public class Main {
         }
     }
 
+    private void altaProducto() {
+        imprimirTitulo("Alta de producto");
+        List<Categoria> categorias = categoriaRepository.listarActivos();
+        if (categorias.isEmpty()) {
+            imprimirMensaje("No hay categorias activas disponibles. Debe crear una categoria antes de cargar productos.");
+            return;
+        }
+
+        categorias.forEach(this::imprimirCategoria);
+        Set<Long> idsValidos = categorias.stream()
+                .map(Categoria::getId)
+                .collect(java.util.stream.Collectors.toSet());
+        long categoriaId = entrada.leerLong(
+                prompt("Seleccione ID de categoria"),
+                idsValidos::contains,
+                "Error: no existe una categoria activa con el ID indicado."
+        );
+        Categoria categoria = categoriaRepository.buscarPorId(categoriaId).orElse(null);
+        if (categoria == null || Boolean.TRUE.equals(categoria.getEliminado())) {
+            imprimirError("Error: no existe una categoria activa con el ID indicado.");
+            return;
+        }
+
+        String nombre = entrada.leerTextoNoVacio(prompt("Nombre"));
+        String descripcion = entrada.leerTextoNoVacio(prompt("Descripcion"));
+        double precio = entrada.leerDecimal(prompt("Precio"), 0.01);
+        int stock = entrada.leerEntero(prompt("Stock"), 0);
+
+        try {
+            Producto producto = new Producto();
+            producto.setId(generarId());
+            producto.setNombre(nombre.trim());
+            producto.setDescripcion(descripcion.trim());
+            producto.setPrecio(precio);
+            producto.setStock(stock);
+            producto.setImagen("sin-imagen");
+            producto.setDisponible(true);
+            producto.setEliminado(false);
+            producto.setCreatedAt(LocalDateTime.now());
+            producto.setCategoria(referenciaCategoria(categoria));
+
+            Producto guardado = productoRepository.guardar(producto);
+            imprimirMensaje("Producto creado correctamente. ID generado: "
+                    + guardado.getId()
+                    + " | Categoria: "
+                    + categoria.getNombre());
+        } catch (RuntimeException exception) {
+            imprimirError("No se guardo el producto: " + exception.getMessage());
+        }
+    }
+
+    private Categoria referenciaCategoria(Categoria categoria) {
+        Categoria referencia = new Categoria();
+        referencia.setId(categoria.getId());
+        referencia.setNombre(categoria.getNombre());
+        referencia.setDescripcion(categoria.getDescripcion());
+        referencia.setEliminado(categoria.getEliminado());
+        referencia.setCreatedAt(categoria.getCreatedAt());
+        return referencia;
+    }
+
     private String leerLinea(String prompt) {
         if (scanner == null) {
             return "";
@@ -194,6 +274,7 @@ public class Main {
         System.out.println("Sistema JPA - Categorias y Productos");
         System.out.println(SEPARADOR);
         imprimirOpcion("1", "Categorias");
+        imprimirOpcion("2", "Productos");
         imprimirOpcion("0", "Salir");
         System.out.println(SEPARADOR);
     }
@@ -206,6 +287,16 @@ public class Main {
         imprimirOpcion("1", "Alta de categoria");
         imprimirOpcion("2", "Modificar categoria");
         imprimirOpcion("3", "Baja logica de categoria");
+        imprimirOpcion("0", "Volver");
+        System.out.println(SEPARADOR);
+    }
+
+    private void mostrarMenuProductos() {
+        System.out.println();
+        System.out.println(SEPARADOR);
+        System.out.println("Productos");
+        System.out.println(SEPARADOR);
+        imprimirOpcion("1", "Alta de producto");
         imprimirOpcion("0", "Volver");
         System.out.println(SEPARADOR);
     }
