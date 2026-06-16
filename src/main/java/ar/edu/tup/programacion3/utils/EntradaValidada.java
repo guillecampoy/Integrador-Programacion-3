@@ -135,6 +135,7 @@ public class EntradaValidada {
 
     private String leerLinea(String prompt) {
         System.out.print(prompt);
+        System.out.flush();
         if (!scanner.hasNextLine()) {
             throw new IllegalStateException("No hay mas entrada disponible.");
         }

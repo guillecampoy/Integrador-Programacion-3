@@ -3,7 +3,7 @@ package ar.edu.tup.programacion3.utils;
 public final class ConsolaUtils {
     public static final String SEPARADOR = "------------------------------------------------------------";
 
-    private static final String PREFIJO_MENSAJE = "  > ";
+    private static final String PREFIJO_MENSAJE = "> ";
     private static final String PREFIJO_ERROR = "  ! ";
 
     private ConsolaUtils() {

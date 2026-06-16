@@ -80,6 +80,20 @@ public abstract class BaseRepository<T> {
         }
     }
 
+    public long siguienteId() {
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        try {
+            Long maxId = entityManager.createQuery(
+                            "select coalesce(max(e.id), 0) from " + entityName() + " e",
+                            Long.class
+                    )
+                    .getSingleResult();
+            return maxId + 1;
+        } finally {
+            entityManager.close();
+        }
+    }
+
     private void marcarEliminado(T entity) {
         if (!(entity instanceof Base base)) {
             throw new IllegalArgumentException("La entidad no hereda de Base: " + entityClass.getName());

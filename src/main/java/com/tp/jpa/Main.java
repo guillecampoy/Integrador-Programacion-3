@@ -254,7 +254,7 @@ public class Main {
 
         try {
             Categoria categoria = new Categoria();
-            categoria.setId(generarId());
+            categoria.setId(categoriaRepository.siguienteId());
             categoria.setNombre(nombre.trim());
             categoria.setDescripcion(descripcion.trim());
             categoria.setEliminado(false);
@@ -402,6 +402,7 @@ public class Main {
             return "";
         }
         System.out.print(prompt);
+        System.out.flush();
         if (!scanner.hasNextLine()) {
             throw new IllegalStateException("No hay mas entrada disponible.");
         }
