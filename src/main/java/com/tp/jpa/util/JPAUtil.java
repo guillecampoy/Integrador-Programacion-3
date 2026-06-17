@@ -3,6 +3,7 @@ package com.tp.jpa.util;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,14 +26,25 @@ public final class JPAUtil {
 
     private static EntityManagerFactory crearEntityManagerFactory() {
         silenciarHibernate();
-        return Persistence.createEntityManagerFactory(
-                "miUnidad",
-                Map.of(
-                        "hibernate.show_sql", "false",
-                        "hibernate.format_sql", "false",
-                        "hibernate.use_sql_comments", "false"
-                )
-        );
+        Map<String, String> propiedades = new HashMap<>();
+        propiedades.put("hibernate.show_sql", "false");
+        propiedades.put("hibernate.format_sql", "false");
+        propiedades.put("hibernate.use_sql_comments", "false");
+        agregarPropiedadSiExiste(propiedades, "jakarta.persistence.jdbc.url", "com.tp.jpa.jdbc.url");
+        agregarPropiedadSiExiste(propiedades, "hibernate.hbm2ddl.auto", "com.tp.jpa.hbm2ddl.auto");
+
+        return Persistence.createEntityManagerFactory("miUnidad", propiedades);
+    }
+
+    private static void agregarPropiedadSiExiste(
+            Map<String, String> propiedades,
+            String nombreJpa,
+            String nombreSistema
+    ) {
+        String valor = System.getProperty(nombreSistema);
+        if (valor != null && !valor.isBlank()) {
+            propiedades.put(nombreJpa, valor);
+        }
     }
 
     private static void silenciarHibernate() {

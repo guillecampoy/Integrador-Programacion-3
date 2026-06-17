@@ -27,6 +27,8 @@ class ProductoRepositoryTest {
             em.createQuery("delete from Pedido").executeUpdate();
             em.createQuery("delete from Producto").executeUpdate();
             em.createQuery("delete from Categoria").executeUpdate();
+            em.createNativeQuery("alter table Categoria alter column id restart with 1").executeUpdate();
+            em.createNativeQuery("alter table Producto alter column id restart with 1").executeUpdate();
             em.getTransaction().commit();
         } catch (RuntimeException e) {
             if (em.getTransaction().isActive()) {
@@ -40,7 +42,6 @@ class ProductoRepositoryTest {
 
     private Categoria guardarCategoria(String nombre) {
         Categoria c = new Categoria();
-        c.setId(categoriaRepository.siguienteId());
         c.setNombre(nombre);
         c.setDescripcion("Desc " + nombre);
         c.setEliminado(false);
@@ -50,7 +51,6 @@ class ProductoRepositoryTest {
 
     private Producto guardarProducto(String nombre, double precio, int stock, Categoria categoria) {
         Producto p = new Producto();
-        p.setId(productoRepository.siguienteId());
         p.setNombre(nombre);
         p.setDescripcion("Desc " + nombre);
         p.setPrecio(precio);

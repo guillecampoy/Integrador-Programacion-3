@@ -101,9 +101,12 @@ class JpaIntegrationTest {
     @Test
     @Order(2)
     void actualizaAlMenosDosProductos() {
+        Long cafeId = buscarProductoPorNombre("Cafe molido").getId();
+        Long yerbaId = buscarProductoPorNombre("Yerba mate").getId();
+
         ejecutarEnTransaccion(entityManager -> {
-            Producto cafe = entityManager.find(Producto.class, 1L);
-            Producto yerba = entityManager.find(Producto.class, 2L);
+            Producto cafe = entityManager.find(Producto.class, cafeId);
+            Producto yerba = entityManager.find(Producto.class, yerbaId);
 
             cafe.setPrecio(cafe.getPrecio() + 100.0);
             cafe.setStock(cafe.getStock() - 1);
@@ -111,8 +114,8 @@ class JpaIntegrationTest {
             yerba.setStock(yerba.getStock() - 2);
         });
 
-        Producto cafeActualizado = buscar(Producto.class, 1L);
-        Producto yerbaActualizada = buscar(Producto.class, 2L);
+        Producto cafeActualizado = buscar(Producto.class, cafeId);
+        Producto yerbaActualizada = buscar(Producto.class, yerbaId);
 
         assertEquals(3300.0, cafeActualizado.getPrecio());
         assertEquals(19, cafeActualizado.getStock());
@@ -121,20 +124,21 @@ class JpaIntegrationTest {
 
         imprimirResultado(
                 "UPDATE",
-                "producto 1 precio=3300.0 stock=19, producto 2 precio=3000.0 stock=46"
+                "Cafe molido precio=3300.0 stock=19, Yerba mate precio=3000.0 stock=46"
         );
     }
 
     @Test
     @Order(3)
     void buscaUsuarioPorId() {
-        Usuario usuario = buscar(Usuario.class, 48L);
+        Long usuarioId = buscarUsuarioPorMail("anagarcia@gmail.com").getId();
+        Usuario usuario = buscar(Usuario.class, usuarioId);
 
         assertNotNull(usuario);
         assertEquals("Ana", usuario.getNombre());
         assertEquals("anagarcia@gmail.com", usuario.getMail());
 
-        imprimirResultado("BUSQUEDA_ID", "id=48, nombre=Ana, mail=anagarcia@gmail.com");
+        imprimirResultado("BUSQUEDA_ID", "id=" + usuarioId + ", nombre=Ana, mail=anagarcia@gmail.com");
     }
 
     @Test
@@ -149,36 +153,60 @@ class JpaIntegrationTest {
                         .getSingleResult()
         );
 
-        assertEquals(50L, usuario.getId());
+        assertTrue(usuario.getId() > 0);
         assertEquals("Bruno", usuario.getNombre());
 
-        imprimirResultado("BUSQUEDA_MAIL", "mail=bjuarez90@gmail.com, id=50, nombre=Bruno");
+        imprimirResultado("BUSQUEDA_MAIL", "mail=bjuarez90@gmail.com, id=" + usuario.getId() + ", nombre=Bruno");
     }
 
     @Test
     @Order(5)
     void borraUnProductoLogicamente() {
+        Long productoId = buscarProductoPorNombre("Esponja multiuso").getId();
+
         ejecutarEnTransaccion(entityManager -> {
-            Producto producto = entityManager.find(Producto.class, 10L);
+            Producto producto = entityManager.find(Producto.class, productoId);
             assertNotNull(producto);
             producto.setEliminado(true);
         });
 
         assertEquals(10L, contar(Producto.class));
-        Producto productoBorrado = buscar(Producto.class, 10L);
+        Producto productoBorrado = buscar(Producto.class, productoId);
         boolean productoAusenteDeActivos = consultar(entityManager ->
                 entityManager.createQuery(
                                 "select p from Producto p where p.id = :id and p.eliminado = false",
                                 Producto.class
                         )
-                        .setParameter("id", 10L)
+                        .setParameter("id", productoId)
                         .getResultList()
                         .isEmpty()
         );
         assertTrue(productoBorrado.getEliminado());
         assertTrue(productoAusenteDeActivos);
 
-        imprimirResultado("DELETE_LOGICO", "producto id=10 marcado eliminado=true, productos fisicos=10");
+        imprimirResultado("DELETE_LOGICO", "producto id=" + productoId + " marcado eliminado=true, productos fisicos=10");
+    }
+
+    private Producto buscarProductoPorNombre(String nombre) {
+        return consultar(entityManager ->
+                entityManager.createQuery(
+                                "select p from Producto p where p.nombre = :nombre",
+                                Producto.class
+                        )
+                        .setParameter("nombre", nombre)
+                        .getSingleResult()
+        );
+    }
+
+    private Usuario buscarUsuarioPorMail(String mail) {
+        return consultar(entityManager ->
+                entityManager.createQuery(
+                                "select u from Usuario u where u.mail = :mail",
+                                Usuario.class
+                        )
+                        .setParameter("mail", mail)
+                        .getSingleResult()
+        );
     }
 
     private void limpiarBase(EntityManager entityManager) {

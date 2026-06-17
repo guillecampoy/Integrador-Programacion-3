@@ -40,7 +40,6 @@ public class DatosSemillaFactory {
         Usuario ana = Usuario.builder()
                 .nombre("Ana")
                 .apellido("Garcia")
-                .id(48L)
                 .mail("anagarcia@gmail.com")
                 .celular("123-456-7890")
                 .contrasenia("Anita345")
@@ -51,7 +50,6 @@ public class DatosSemillaFactory {
         Usuario bruno = Usuario.builder()
                 .nombre("Bruno")
                 .apellido("Juárez")
-                .id(50L)
                 .mail("bjuarez90@gmail.com")
                 .celular("123-456-7890")
                 .contrasenia("BruN096")
@@ -71,21 +69,18 @@ public class DatosSemillaFactory {
         Categoria almacen = Categoria.builder()
                 .nombre("Almacen")
                 .descripcion("Productos secos y envasados")
-                .id(1L)
                 .createdAt(LocalDateTime.now())
                 .eliminado(false)
                 .build();
         Categoria bebidas = Categoria.builder()
                 .nombre("Bebidas")
                 .descripcion("Bebidas frias y calientes")
-                .id(2L)
                 .createdAt(LocalDateTime.now())
                 .eliminado(false)
                 .build();
         Categoria limpieza = Categoria.builder()
                 .nombre("Limpieza")
                 .descripcion("Articulos de limpieza del hogar")
-                .id(3L)
                 .createdAt(LocalDateTime.now())
                 .eliminado(false)
                 .build();
@@ -106,7 +101,6 @@ public class DatosSemillaFactory {
                 .disponible(true)
                 .stock(20)
                 .categoria(categorias.almacen())
-                .id(1L)
                 .createdAt(LocalDateTime.now())
                 .eliminado(false)
                 .build();
@@ -118,7 +112,6 @@ public class DatosSemillaFactory {
                 .disponible(true)
                 .stock(48)
                 .categoria(categorias.almacen())
-                .id(2L)
                 .createdAt(LocalDateTime.now())
                 .eliminado(false)
                 .build();
@@ -130,7 +123,6 @@ public class DatosSemillaFactory {
                 .disponible(true)
                 .stock(99)
                 .categoria(categorias.almacen())
-                .id(3L)
                 .createdAt(LocalDateTime.now())
                 .eliminado(false)
                 .build();
@@ -142,7 +134,6 @@ public class DatosSemillaFactory {
                 .disponible(true)
                 .stock(150)
                 .categoria(categorias.almacen())
-                .id(4L)
                 .createdAt(LocalDateTime.now())
                 .eliminado(false)
                 .build();
@@ -154,7 +145,6 @@ public class DatosSemillaFactory {
                 .disponible(true)
                 .stock(15)
                 .categoria(categorias.bebidas())
-                .id(5L)
                 .createdAt(LocalDateTime.now())
                 .eliminado(false)
                 .build();
@@ -166,7 +156,6 @@ public class DatosSemillaFactory {
                 .disponible(true)
                 .stock(25)
                 .categoria(categorias.bebidas())
-                .id(6L)
                 .createdAt(LocalDateTime.now())
                 .eliminado(false)
                 .build();
@@ -178,7 +167,6 @@ public class DatosSemillaFactory {
                 .disponible(true)
                 .stock(259)
                 .categoria(categorias.almacen())
-                .id(7L)
                 .createdAt(LocalDateTime.now())
                 .eliminado(false)
                 .build();
@@ -190,7 +178,6 @@ public class DatosSemillaFactory {
                 .disponible(true)
                 .stock(99)
                 .categoria(categorias.limpieza())
-                .id(8L)
                 .createdAt(LocalDateTime.now())
                 .eliminado(false)
                 .build();
@@ -202,7 +189,6 @@ public class DatosSemillaFactory {
                 .disponible(true)
                 .stock(80)
                 .categoria(categorias.limpieza())
-                .id(9L)
                 .createdAt(LocalDateTime.now())
                 .eliminado(false)
                 .build();
@@ -214,7 +200,6 @@ public class DatosSemillaFactory {
                 .disponible(true)
                 .stock(4)
                 .categoria(categorias.almacen())
-                .id(10L)
                 .createdAt(LocalDateTime.now())
                 .eliminado(false)
                 .build();
@@ -256,41 +241,28 @@ public class DatosSemillaFactory {
     private static Set<Pedido> crearPedidos(UsuariosSemilla usuarios, ProductosSemilla productos) {
         Set<Pedido> pedidos = new LinkedHashSet<>();
 
-        Pedido pedido1 = crearPedido(1L, LocalDate.of(2026, 5, 10), Estado.CONFIRMADO, FormaPago.TARJETA, usuarios.ana());
+        Pedido pedido1 = crearPedido(LocalDate.of(2026, 5, 10), Estado.CONFIRMADO, FormaPago.TARJETA, usuarios.ana());
         pedido1.addDetallePedido(productos.cafeMolido(), 1);
         pedido1.addDetallePedido(productos.gaseosa(), 2);
         pedidos.add(pedido1);
 
-        Pedido pedido2 = crearPedido(2L, LocalDate.of(2026, 5, 12), Estado.PENDIENTE, FormaPago.EFECTIVO, usuarios.ana());
+        Pedido pedido2 = crearPedido(LocalDate.of(2026, 5, 12), Estado.PENDIENTE, FormaPago.EFECTIVO, usuarios.ana());
         pedido2.addDetallePedido(productos.yerbaMate(), 1);
         pedido2.addDetallePedido(productos.detergente(), 1);
         pedido2.addDetallePedido(productos.aguaMineral(), 3);
         pedidos.add(pedido2);
 
-        Pedido pedido3 = crearPedido(3L, LocalDate.of(2026, 5, 13), Estado.TERMINADO, FormaPago.TRANSFERENCIA, usuarios.bruno());
+        Pedido pedido3 = crearPedido(LocalDate.of(2026, 5, 13), Estado.TERMINADO, FormaPago.TRANSFERENCIA, usuarios.bruno());
         pedido3.addDetallePedido(productos.arroz(), 2);
         pedido3.addDetallePedido(productos.fideos(), 4);
         pedido3.addDetallePedido(productos.lavandina(), 1);
         pedidos.add(pedido3);
 
-        asignarIdsDetalles(pedidos);
-
         return pedidos;
     }
 
-    private static void asignarIdsDetalles(Set<Pedido> pedidos) {
-        long id = 1L;
-        for (Pedido pedido : pedidos) {
-            for (var detallePedido : pedido.getDetallePedidos()) {
-                detallePedido.setId(id);
-                id++;
-            }
-        }
-    }
-
-    private static Pedido crearPedido(Long id, LocalDate fecha, Estado estado, FormaPago formaPago, Usuario usuario) {
+    private static Pedido crearPedido(LocalDate fecha, Estado estado, FormaPago formaPago, Usuario usuario) {
         Pedido pedido = Pedido.builder()
-                .id(id)
                 .fecha(fecha)
                 .estado(estado)
                 .formaPago(formaPago)
@@ -306,7 +278,6 @@ public class DatosSemillaFactory {
         Categoria categoriaEquivalente = Categoria.builder()
                 .nombre("Almacen")
                 .descripcion("Productos secos y envasados")
-                .id(1L)
                 .createdAt(LocalDateTime.now())
                 .eliminado(false)
                 .build();
@@ -318,7 +289,6 @@ public class DatosSemillaFactory {
                 .disponible(true)
                 .stock(20)
                 .categoria(categoriaEquivalente)
-                .id(1L)
                 .createdAt(LocalDateTime.now())
                 .eliminado(false)
                 .build();

@@ -254,7 +254,6 @@ public class Main {
 
         try {
             Categoria categoria = new Categoria();
-            categoria.setId(categoriaRepository.siguienteId());
             categoria.setNombre(nombre.trim());
             categoria.setDescripcion(descripcion.trim());
             categoria.setEliminado(false);
@@ -366,7 +365,6 @@ public class Main {
 
         try {
             Producto producto = new Producto();
-            producto.setId(generarId());
             producto.setNombre(nombre.trim());
             producto.setDescripcion(descripcion.trim());
             producto.setPrecio(precio);
@@ -429,10 +427,6 @@ public class Main {
                 + " | Nombre: " + producto.getNombre()
                 + " | Precio: " + producto.getPrecio()
                 + " | Stock: " + producto.getStock());
-    }
-
-    private long generarId() {
-        return System.currentTimeMillis();
     }
 
     private void mostrarMenuPrincipal() {

@@ -25,6 +25,7 @@ class CategoriaRepositoryTest {
             em.createQuery("delete from Pedido").executeUpdate();
             em.createQuery("delete from Producto").executeUpdate();
             em.createQuery("delete from Categoria").executeUpdate();
+            em.createNativeQuery("alter table Categoria alter column id restart with 1").executeUpdate();
             em.getTransaction().commit();
         } catch (RuntimeException e) {
             if (em.getTransaction().isActive()) {
@@ -38,7 +39,6 @@ class CategoriaRepositoryTest {
 
     private Categoria crearCategoria(String nombre) {
         Categoria c = new Categoria();
-        c.setId(repository.siguienteId());
         c.setNombre(nombre);
         c.setDescripcion("Desc " + nombre);
         c.setEliminado(false);

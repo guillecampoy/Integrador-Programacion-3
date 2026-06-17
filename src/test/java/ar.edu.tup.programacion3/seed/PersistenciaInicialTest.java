@@ -50,15 +50,19 @@ class PersistenciaInicialTest {
                 configuracion.archivosBase(),
                 configuracion.jdbcUrl()
         )) {
+            Long cafeId = buscarProductoPorNombre(persistenciaInicial, "Cafe molido").id();
+            Long yerbaId = buscarProductoPorNombre(persistenciaInicial, "Yerba mate").id();
+            Long bebidasId = buscarCategoriaPorNombre(persistenciaInicial, "Bebidas").id();
+
             PersistenciaInicial.ProductoResumen cafe = persistenciaInicial.actualizarProducto(
-                    PersistenciaInicial.ProductoActualizacion.nombre(1L, "Cafe actualizado")
+                    PersistenciaInicial.ProductoActualizacion.nombre(cafeId, "Cafe actualizado")
             );
             PersistenciaInicial.ProductoResumen yerba = persistenciaInicial.actualizarProducto(
-                    PersistenciaInicial.ProductoActualizacion.categoria(2L, 2L)
+                    PersistenciaInicial.ProductoActualizacion.categoria(yerbaId, bebidasId)
             );
 
             assertEquals("Cafe actualizado", cafe.nombre());
-            assertEquals(2L, yerba.categoriaId());
+            assertEquals(bebidasId, yerba.categoriaId());
             assertEquals("Bebidas", yerba.categoria());
         }
     }
@@ -72,7 +76,9 @@ class PersistenciaInicialTest {
                 configuracion.archivosBase(),
                 configuracion.jdbcUrl()
         )) {
-            PersistenciaInicial.UsuarioResumen usuarioPorId = persistenciaInicial.buscarUsuarioPorId(48L)
+            PersistenciaInicial.UsuarioResumen ana = persistenciaInicial.buscarUsuariosPorMail("anagarcia")
+                    .get(0);
+            PersistenciaInicial.UsuarioResumen usuarioPorId = persistenciaInicial.buscarUsuarioPorId(ana.id())
                     .orElseThrow();
             List<PersistenciaInicial.UsuarioResumen> usuariosPorGmail = persistenciaInicial.buscarUsuariosPorMail("gmail");
             List<PersistenciaInicial.UsuarioResumen> usuariosPorApellido = persistenciaInicial.buscarUsuariosPorMail("juarez");
@@ -81,7 +87,7 @@ class PersistenciaInicialTest {
             assertEquals("anagarcia@gmail.com", usuarioPorId.mail());
             assertEquals(2, usuariosPorGmail.size());
             assertEquals(1, usuariosPorApellido.size());
-            assertEquals(50L, usuariosPorApellido.get(0).id());
+            assertTrue(usuariosPorApellido.get(0).id() > 0);
             assertEquals("Bruno", usuariosPorApellido.get(0).nombre());
             assertTrue(persistenciaInicial.buscarUsuarioPorId(999L).isEmpty());
             assertTrue(persistenciaInicial.buscarUsuariosPorMail("noexiste").isEmpty());
@@ -97,7 +103,9 @@ class PersistenciaInicialTest {
                 configuracion.archivosBase(),
                 configuracion.jdbcUrl()
         )) {
-            PersistenciaInicial.ProductoResumen productoBorrado = persistenciaInicial.borrarProducto(1L);
+            Long productoId = buscarProductoPorNombre(persistenciaInicial, "Cafe molido").id();
+
+            PersistenciaInicial.ProductoResumen productoBorrado = persistenciaInicial.borrarProducto(productoId);
             PersistenciaInicial.ResumenPersistencia resumen = persistenciaInicial.contarDatos();
             List<PersistenciaInicial.ProductoResumen> productosActivos = persistenciaInicial.listarProductos();
             List<PersistenciaInicial.ProductoResumen> productosEliminados = persistenciaInicial.listarProductosEliminados();
@@ -107,19 +115,39 @@ class PersistenciaInicialTest {
             assertEquals(9L, resumen.productosActivos());
             assertEquals(1L, resumen.productosEliminados());
             assertEquals(9, productosActivos.size());
-            assertFalse(productosActivos.stream().anyMatch(producto -> producto.id().equals(1L)));
+            assertFalse(productosActivos.stream().anyMatch(producto -> producto.id().equals(productoId)));
             assertEquals(1, productosEliminados.size());
-            assertEquals(1L, productosEliminados.get(0).id());
+            assertEquals(productoId, productosEliminados.get(0).id());
 
-            PersistenciaInicial.ProductoResumen productoRestaurado = persistenciaInicial.restaurarProducto(1L);
+            PersistenciaInicial.ProductoResumen productoRestaurado = persistenciaInicial.restaurarProducto(productoId);
             PersistenciaInicial.ResumenPersistencia resumenRestaurado = persistenciaInicial.contarDatos();
 
             assertFalse(productoRestaurado.eliminado());
             assertEquals(10L, resumenRestaurado.productosActivos());
             assertEquals(0L, resumenRestaurado.productosEliminados());
-            assertTrue(persistenciaInicial.listarProductos().stream().anyMatch(producto -> producto.id().equals(1L)));
+            assertTrue(persistenciaInicial.listarProductos().stream().anyMatch(producto -> producto.id().equals(productoId)));
             assertTrue(persistenciaInicial.listarProductosEliminados().isEmpty());
         }
+    }
+
+    private PersistenciaInicial.ProductoResumen buscarProductoPorNombre(
+            PersistenciaInicial persistenciaInicial,
+            String nombre
+    ) {
+        return persistenciaInicial.listarProductos().stream()
+                .filter(producto -> producto.nombre().equals(nombre))
+                .findFirst()
+                .orElseThrow();
+    }
+
+    private PersistenciaInicial.CategoriaResumen buscarCategoriaPorNombre(
+            PersistenciaInicial persistenciaInicial,
+            String nombre
+    ) {
+        return persistenciaInicial.listarCategorias().stream()
+                .filter(categoria -> categoria.nombre().equals(nombre))
+                .findFirst()
+                .orElseThrow();
     }
 
     private ConfiguracionTemporal crearConfiguracionTemporal() {

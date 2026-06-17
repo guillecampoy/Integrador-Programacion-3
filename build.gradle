@@ -35,6 +35,8 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    systemProperty 'com.tp.jpa.jdbc.url', 'jdbc:h2:mem:repository_tests;DB_CLOSE_DELAY=-1'
+    systemProperty 'com.tp.jpa.hbm2ddl.auto', 'create-drop'
     testLogging {
         events 'passed', 'skipped', 'failed'
         showStandardStreams = true
