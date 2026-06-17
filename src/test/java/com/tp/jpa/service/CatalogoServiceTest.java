@@ -46,6 +46,77 @@ class CatalogoServiceTest {
     }
 
     @Test
+    void crearCategoriaRechazaEntradaInvalidaAntesDeGuardar() {
+        FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+        CatalogoService service = new CatalogoService(categoriaRepository, new FakeProductoRepository());
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> service.crearCategoria(" ", "Descripcion")
+        );
+
+        assertEquals("Error: El nombre de la categoria es obligatorio.", exception.getMessage());
+        assertEquals(0, categoriaRepository.guardarLlamadas);
+    }
+
+    @Test
+    void crearProductoRechazaPrecioYStockInvalidosAntesDeGuardar() {
+        FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+        FakeProductoRepository productoRepository = new FakeProductoRepository();
+        categoriaRepository.add(crearCategoria(1L, "Bebidas", false));
+        CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+
+        IllegalArgumentException precioException = assertThrows(
+                IllegalArgumentException.class,
+                () -> service.crearProducto(1L, "Cafe", "Cafe molido", 0.0, 10)
+        );
+        IllegalArgumentException stockException = assertThrows(
+                IllegalArgumentException.class,
+                () -> service.crearProducto(1L, "Cafe", "Cafe molido", 1500.0, -1)
+        );
+
+        assertEquals("Error: el precio debe ser mayor a 0.", precioException.getMessage());
+        assertEquals("Error: el stock debe ser mayor o igual a 0.", stockException.getMessage());
+        assertEquals(0, productoRepository.guardarLlamadas);
+    }
+
+    @Test
+    void modificarProductoRechazaEntradaInvalidaSinMutarEntidad() {
+        FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+        FakeProductoRepository productoRepository = new FakeProductoRepository();
+        Categoria categoria = crearCategoria(1L, "Bebidas", false);
+        Producto producto = crearProducto(1L, "Cafe", categoria, false);
+        productoRepository.add(producto);
+        CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> service.modificarProducto(1L, "Actualizado", -5.0, 9)
+        );
+
+        assertEquals("Error: el precio debe ser mayor a 0.", exception.getMessage());
+        assertEquals("Cafe", producto.getNombre());
+        assertEquals(100.0, producto.getPrecio());
+        assertEquals(5, producto.getStock());
+        assertEquals(0, productoRepository.guardarLlamadas);
+    }
+
+    @Test
+    void operacionesRechazanIdsInvalidosAntesDeConsultarRepositorio() {
+        FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+        FakeProductoRepository productoRepository = new FakeProductoRepository();
+        CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> service.obtenerCategoriaActiva(0L)
+        );
+
+        assertEquals("Error: el ID de categoria debe ser mayor a 0.", exception.getMessage());
+        assertEquals(0, categoriaRepository.buscarPorIdLlamadas);
+    }
+
+    @Test
     void bajaProductoInactivoInformaEstadoCorrecto() {
         FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
         FakeProductoRepository productoRepository = new FakeProductoRepository();
@@ -106,6 +177,8 @@ class CatalogoServiceTest {
         private final Map<Long, Categoria> store = new HashMap<>();
         private long nextId = 1L;
         private boolean ultimoGuardadoLlegoSinId;
+        private int guardarLlamadas;
+        private int buscarPorIdLlamadas;
 
         void add(Categoria categoria) {
             store.put(categoria.getId(), categoria);
@@ -114,6 +187,7 @@ class CatalogoServiceTest {
 
         @Override
         public Categoria guardar(Categoria entity) {
+            guardarLlamadas++;
             ultimoGuardadoLlegoSinId = entity.getId() == null;
             if (entity.getId() == null) {
                 entity.setId(nextId++);
@@ -124,6 +198,7 @@ class CatalogoServiceTest {
 
         @Override
         public Optional<Categoria> buscarPorId(Long id) {
+            buscarPorIdLlamadas++;
             return Optional.ofNullable(store.get(id));
         }
 
@@ -149,6 +224,7 @@ class CatalogoServiceTest {
         private final Map<Long, Producto> store = new HashMap<>();
         private long nextId = 1L;
         private boolean ultimoGuardadoLlegoSinId;
+        private int guardarLlamadas;
 
         void add(Producto producto) {
             store.put(producto.getId(), producto);
@@ -157,6 +233,7 @@ class CatalogoServiceTest {
 
         @Override
         public Producto guardar(Producto entity) {
+            guardarLlamadas++;
             ultimoGuardadoLlegoSinId = entity.getId() == null;
             if (entity.getId() == null) {
                 entity.setId(nextId++);

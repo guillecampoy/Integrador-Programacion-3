@@ -60,6 +60,7 @@ Estas restricciones son de maxima prioridad para el agente de desarrollo:
 12. Toda transacción de escritura debe hacer `rollback` si ocurre un error antes del `commit`.
 13. Las operaciones de menu deben manejar errores de usuario sin romper la aplicación por una excepción no controlada.
 14. La lógica de negocio debe vivir en `CatalogoService`; `Main` debe limitarse a entrada/salida de consola y navegación de menús.
+15. La capa de servicio debe validar entradas antes de crear o modificar entidades.
 
 ## Estructura de paquetes requerida
 
@@ -101,7 +102,7 @@ La clase `src/main/java/ar/edu/tup/programacion3/Main.java` de una entrega anter
 | `BaseRepository.java`      | `com.tp.jpa.repository` | Repositorio generico abstracto `<T>` con operaciones comunes: `guardar`, `buscarPorId`, `listarActivos`, `eliminarLogico`.    |
 | `CategoriaRepository.java` | `com.tp.jpa.repository` | Repositorio especifico de `Categoria`. Extiende `BaseRepository<Categoria>`. No agrega metodos.                               |
 | `ProductoRepository.java`  | `com.tp.jpa.repository` | Repositorio especifico de `Producto`. Extiende `BaseRepository<Producto>` y agrega `buscarPorCategoria(Long categoriaId)`.    |
-| `CatalogoService.java`     | `com.tp.jpa.service`    | Capa de servicio para reglas de negocio, validación de activos, creación, modificación, baja lógica y reportes por categoria. |
+| `CatalogoService.java`     | `com.tp.jpa.service`    | Capa de servicio para validación de entrada, reglas de negocio, creación, modificación, baja lógica y reportes por categoria. |
 | `Main.java`                | `com.tp.jpa`            | Aplicacion de consola con menu principal y submenus. No accede directamente a repositorios para reglas de negocio.            |
 
 ## Protocolo recomendado para agente de desarrollo
@@ -134,6 +135,7 @@ Confirmar:
 10. Forma ya prevista por el proyecto para ejecutar una clase `main`.
 11. Que las altas no asignen IDs antes de persistir.
 12. Que `Main` use `CatalogoService` para operaciones de negocio.
+13. Que `CatalogoService` valide entradas antes de construir o mutar entidades.
 
 Regla de trabajo: implementar una historia por vez, compilar, corregir y recién después avanzar.
 
@@ -243,14 +245,24 @@ Si la entidad usa un nombre JPA personalizado con `@Entity(name = "...")`, ajust
 Responsabilidades:
 
 1. Recibir `CategoriaRepository` y `ProductoRepository` por constructor.
-2. Crear categorías y productos con `id == null` para respetar IDs autogenerados.
-3. Setear valores operativos por defecto (`eliminado = false`, `createdAt`, `disponible`, imagen por defecto en productos).
-4. Validar existencia y estado activo antes de modificar, dar de baja o listar productos por categoria.
-5. Ejecutar bajas lógicas a través de los repositorios.
-6. Exponer listados activos para que la consola pueda mostrarlos y validar opciones.
-7. Lanzar excepciones con mensajes de negocio claros cuando el ID no existe o el registro ya está dado de baja.
+2. Validar entradas antes de crear entidades o mutar entidades existentes.
+3. Crear categorías y productos con `id == null` para respetar IDs autogenerados.
+4. Setear valores operativos por defecto (`eliminado = false`, `createdAt`, `disponible`, imagen por defecto en productos).
+5. Validar existencia y estado activo antes de modificar, dar de baja o listar productos por categoria.
+6. Ejecutar bajas lógicas a través de los repositorios.
+7. Exponer listados activos para que la consola pueda mostrarlos y validar opciones.
+8. Lanzar excepciones con mensajes de negocio claros cuando el ID no existe, la entrada es inválida o el registro ya está dado de baja.
 
 `Main` debe llamar a este servicio y reservarse la lectura de datos, impresión de menús, parseo de entradas y mensajes de consola.
+
+Validaciones mínimas de servicio:
+
+1. IDs obligatorios y mayores a 0 antes de consultar repositorios.
+2. Nombre y descripción obligatorios al crear categorías.
+3. Nombre y descripción obligatorios al crear productos.
+4. Precio de producto mayor a 0.
+5. Stock de producto mayor o igual a 0.
+6. En modificación, campos vacíos conservan el valor anterior; campos presentes se validan antes de tocar la entidad.
 
 ## Contrato de Main
 
@@ -311,6 +323,8 @@ Las opciones de modificación, alta de producto y reportes muestran listados act
 10. Si una categoria no tiene productos activos, informar explícitamente.
 
 Sugerencia técnica: leer entradas con `Scanner.nextLine()` y parsear manualmente. Esto evita problemas comunes al mezclar `nextInt()`/`nextDouble()` con `nextLine()`.
+
+Estas validaciones también existen en `CatalogoService` como defensa de capa. La consola puede rechazar entradas inválidas temprano, pero el servicio no debe confiar en que todas las llamadas vienen desde consola.
 
 ## Salidas mínimas esperadas
 
@@ -387,9 +401,9 @@ Adicionalmente, la entrega actual separa responsabilidades con `CatalogoService`
 
 | Item extra          | Descripcion                                                                 |
 |---------------------|-----------------------------------------------------------------------------|
-| Servicio de negocio | `CatalogoService` encapsula reglas de alta, modificación, baja y reportes. |
+| Servicio de negocio | `CatalogoService` encapsula validaciones, alta, modificación, baja y reportes. |
 | Presentación        | `com.tp.jpa.Main` queda como capa de consola y unica clase `Main`.          |
-| Tests               | `CatalogoServiceTest` cubre reglas de servicio y `MainTest` cubre flujos UI. |
+| Tests               | `CatalogoServiceTest` cubre validaciones/reglas de servicio y `MainTest` cubre flujos UI. |
 
 ## Pruebas manuales integrales
 
