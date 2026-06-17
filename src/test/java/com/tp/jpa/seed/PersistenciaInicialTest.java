@@ -43,6 +43,64 @@ class PersistenciaInicialTest {
     }
 
     @Test
+    void noDuplicaSemillaCuandoLaBaseYaExiste() {
+        ConfiguracionTemporal configuracion = crearConfiguracionTemporal();
+
+        try (PersistenciaInicial primeraInicializacion = PersistenciaInicial.inicializar(
+                configuracion.archivoBase(),
+                configuracion.archivosBase(),
+                configuracion.jdbcUrl()
+        )) {
+            assertFalse(primeraInicializacion.isBaseLocalExistia());
+            assertTrue(primeraInicializacion.isDatosInicialesPersistidos());
+        }
+
+        try (PersistenciaInicial segundaInicializacion = PersistenciaInicial.inicializar(
+                configuracion.archivoBase(),
+                configuracion.archivosBase(),
+                configuracion.jdbcUrl()
+        )) {
+            PersistenciaInicial.ResumenPersistencia resumen = segundaInicializacion.contarDatos();
+
+            assertTrue(segundaInicializacion.isBaseLocalExistia());
+            assertFalse(segundaInicializacion.isDatosInicialesPersistidos());
+            assertEquals(2L, resumen.usuarios());
+            assertEquals(3L, resumen.categorias());
+            assertEquals(10L, resumen.productos());
+            assertEquals(3L, resumen.pedidos());
+        }
+    }
+
+    @Test
+    void regeneraBaseYReaplicaSemillaLimpia() {
+        ConfiguracionTemporal configuracion = crearConfiguracionTemporal();
+
+        try (PersistenciaInicial persistenciaInicial = PersistenciaInicial.inicializar(
+                configuracion.archivoBase(),
+                configuracion.archivosBase(),
+                configuracion.jdbcUrl()
+        )) {
+            Long productoId = buscarProductoPorNombre(persistenciaInicial, "Cafe molido").id();
+            persistenciaInicial.borrarProducto(productoId);
+            assertEquals(9L, persistenciaInicial.contarDatos().productosActivos());
+        }
+
+        PersistenciaInicial.ResumenPersistencia resumen = PersistenciaInicial.regenerar(
+                configuracion.archivoBase(),
+                configuracion.archivosBase(),
+                configuracion.jdbcUrl()
+        );
+
+        assertTrue(Files.exists(configuracion.archivoBase()));
+        assertEquals(2L, resumen.usuarios());
+        assertEquals(3L, resumen.categorias());
+        assertEquals(10L, resumen.productos());
+        assertEquals(10L, resumen.productosActivos());
+        assertEquals(0L, resumen.productosEliminados());
+        assertEquals(3L, resumen.pedidos());
+    }
+
+    @Test
     void actualizaProductosPersistidos() {
         ConfiguracionTemporal configuracion = crearConfiguracionTemporal();
 

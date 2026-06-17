@@ -4,6 +4,7 @@ import com.tp.jpa.model.Categoria;
 import com.tp.jpa.model.Pedido;
 import com.tp.jpa.model.Producto;
 import com.tp.jpa.model.Usuario;
+import com.tp.jpa.util.JPAUtil;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.NoResultException;
@@ -35,10 +36,17 @@ public class PersistenciaInicial implements AutoCloseable {
     private boolean datosInicialesPersistidos;
 
     private PersistenciaInicial(Path baseLocal, List<Path> archivosBaseLocal, String jdbcUrl) {
+        crearDirectorioBase(baseLocal);
+        JPAUtil.silenciarHibernate();
         this.baseLocalExistia = existeBaseLocal(baseLocal);
         this.entityManagerFactory = Persistence.createEntityManagerFactory(
                 UNIDAD_PERSISTENCIA,
-                Map.of("jakarta.persistence.jdbc.url", jdbcUrl)
+                Map.of(
+                        "jakarta.persistence.jdbc.url", jdbcUrl,
+                        "hibernate.show_sql", "false",
+                        "hibernate.format_sql", "false",
+                        "hibernate.use_sql_comments", "false"
+                )
         );
     }
 
@@ -52,10 +60,30 @@ public class PersistenciaInicial implements AutoCloseable {
         return persistenciaInicial;
     }
 
+    public static ResumenPersistencia regenerarBaseLocal() {
+        JPAUtil.close();
+        borrarBaseLocal();
+        try (PersistenciaInicial persistenciaInicial = inicializar()) {
+            return persistenciaInicial.contarDatos();
+        } finally {
+            JPAUtil.close();
+        }
+    }
+
     static PersistenciaInicial inicializar(Path baseLocal, List<Path> archivosBaseLocal, String jdbcUrl) {
         PersistenciaInicial persistenciaInicial = new PersistenciaInicial(baseLocal, archivosBaseLocal, jdbcUrl);
         persistenciaInicial.persistirDatosInicialesSiCorresponde();
         return persistenciaInicial;
+    }
+
+    static ResumenPersistencia regenerar(Path baseLocal, List<Path> archivosBaseLocal, String jdbcUrl) {
+        JPAUtil.close();
+        archivosBaseLocal.forEach(PersistenciaInicial::borrarSiExiste);
+        try (PersistenciaInicial persistenciaInicial = inicializar(baseLocal, archivosBaseLocal, jdbcUrl)) {
+            return persistenciaInicial.contarDatos();
+        } finally {
+            JPAUtil.close();
+        }
     }
 
     public static boolean existeBaseLocal() {
@@ -222,6 +250,18 @@ public class PersistenciaInicial implements AutoCloseable {
 
     private static boolean existeBaseLocal(Path baseLocal) {
         return Files.exists(baseLocal);
+    }
+
+    private static void crearDirectorioBase(Path baseLocal) {
+        Path directorio = baseLocal.getParent();
+        if (directorio == null) {
+            return;
+        }
+        try {
+            Files.createDirectories(directorio);
+        } catch (IOException exception) {
+            throw new IllegalStateException("No se pudo crear el directorio de la base local.", exception);
+        }
     }
 
     private long contar(EntityManager entityManager, Class<?> entityClass) {

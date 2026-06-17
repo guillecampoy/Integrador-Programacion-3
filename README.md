@@ -128,6 +128,7 @@ Sistema JPA - Categorias y Productos
 1. Categorias
 2. Productos
 3. Reportes
+4. Regenerar datos
 0. Salir
 ```
 
@@ -182,7 +183,9 @@ La base local usa H2 en archivo:
 jdbc:h2:file:./data/jpa_db
 ```
 
-La base local no se versiona. Hibernate la crea automaticamente al ejecutar la aplicacion y la configuracion local usa `hibernate.hbm2ddl.auto=create`.
+La base local no se versiona. Hibernate la crea automaticamente al ejecutar la aplicacion si no existe. La configuracion local usa `hibernate.hbm2ddl.auto=update`, por lo que no borra datos en cada arranque.
+
+Al iniciar la aplicacion se aplica la semilla solo cuando la base local no existe o no tiene registros. Para volver a cargar una base limpia desde cero, usar la opcion `Regenerar datos` del menu principal; esa accion borra los archivos locales de H2, recrea el esquema nuevo y vuelve a aplicar la semilla.
 
 ## Ejecucion
 
@@ -281,7 +284,18 @@ Explicar:
 4. `eliminarLogico` marca `eliminado = true`.
 5. `ProductoRepository.buscarPorCategoria` usa JPQL con `TypedQuery<Producto>`.
 
-### 4. Demo de Categorias
+### 4. Demo de Regeneracion de Datos
+
+Duracion sugerida: 1 minuto.
+
+En la consola:
+
+1. Entrar a `Regenerar datos`.
+2. Confirmar la operacion con `s`.
+3. Mostrar el resumen de registros cargados.
+4. Aclarar que la base local no se versiona y que la regeneracion aplica nuevamente la semilla sobre un esquema limpio.
+
+### 5. Demo de Categorias
 
 Duracion sugerida: 2 minutos.
 
@@ -295,7 +309,7 @@ En la consola:
 6. Dar de baja una categoria.
 7. Confirmar que no aparece en el listado activo.
 
-### 5. Demo de Productos
+### 6. Demo de Productos
 
 Duracion sugerida: 3 minutos.
 
@@ -310,7 +324,7 @@ En la consola:
 7. Dar de baja un producto.
 8. Confirmar que no aparece en productos activos.
 
-### 6. Demo de Reporte por Categoria
+### 7. Demo de Reporte por Categoria
 
 Duracion sugerida: 2 minutos.
 
@@ -322,7 +336,7 @@ En la consola:
 4. Mostrar productos con ID, nombre, precio y stock.
 5. Luego de bajar un producto, repetir el reporte y confirmar que ya no aparece.
 
-### 7. Tests y Cierre
+### 8. Tests y Cierre
 
 Duracion sugerida: 2 minutos.
 

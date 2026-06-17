@@ -6,6 +6,7 @@ import com.tp.jpa.model.Producto;
 import com.tp.jpa.model.Usuario;
 import com.tp.jpa.seed.DatosSemilla;
 import com.tp.jpa.seed.DatosSemillaFactory;
+import com.tp.jpa.util.JPAUtil;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
@@ -39,6 +40,7 @@ class JpaIntegrationTest {
     void setUp() {
         assertTrue(TEST_JDBC_URL.startsWith("jdbc:h2:mem:"));
         assertFalse(TEST_JDBC_URL.contains("./data/jpa_db"));
+        JPAUtil.silenciarHibernate();
 
         entityManagerFactory = Persistence.createEntityManagerFactory(
                 "miUnidad",

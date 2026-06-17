@@ -5,12 +5,14 @@ import com.tp.jpa.model.Producto;
 import com.tp.jpa.util.EntradaValidada;
 import com.tp.jpa.repository.CategoriaRepository;
 import com.tp.jpa.repository.ProductoRepository;
+import com.tp.jpa.seed.PersistenciaInicial;
 import com.tp.jpa.service.CatalogoService;
 import com.tp.jpa.util.JPAUtil;
 
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import static com.tp.jpa.util.ConsolaUtils.SEPARADOR;
 import static com.tp.jpa.util.ConsolaUtils.imprimirError;
@@ -23,24 +25,38 @@ public class Main {
     private final Scanner scanner;
     private final EntradaValidada entrada;
     private final CatalogoService catalogoService;
+    private final Supplier<PersistenciaInicial.ResumenPersistencia> regeneradorDatos;
 
     public Main(Scanner scanner, CategoriaRepository categoriaRepository, ProductoRepository productoRepository) {
         this(scanner, new CatalogoService(categoriaRepository, productoRepository));
     }
 
     Main(Scanner scanner, CatalogoService catalogoService) {
+        this(scanner, catalogoService, PersistenciaInicial::regenerarBaseLocal);
+    }
+
+    Main(
+            Scanner scanner,
+            CatalogoService catalogoService,
+            Supplier<PersistenciaInicial.ResumenPersistencia> regeneradorDatos
+    ) {
         this.scanner = scanner;
         this.entrada = new EntradaValidada(scanner);
         this.catalogoService = catalogoService;
+        this.regeneradorDatos = regeneradorDatos;
     }
 
     Main(EntradaValidada entrada, CategoriaRepository categoriaRepository, ProductoRepository productoRepository) {
         this.scanner = null;
         this.entrada = entrada;
         this.catalogoService = new CatalogoService(categoriaRepository, productoRepository);
+        this.regeneradorDatos = PersistenciaInicial::regenerarBaseLocal;
     }
 
     public static void main(String[] args) {
+        try (PersistenciaInicial ignored = PersistenciaInicial.inicializar()) {
+            // La inicializacion crea la base local y aplica datos semilla solo cuando corresponde.
+        }
         try (Scanner scanner = new Scanner(System.in)) {
             new Main(scanner, new CategoriaRepository(), new ProductoRepository()).ejecutar();
         } finally {
@@ -52,14 +68,38 @@ public class Main {
         boolean salir = false;
         while (!salir) {
             mostrarMenuPrincipal();
-            String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2", "3"));
+            String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2", "3", "4"));
             switch (opcion) {
                 case "1" -> menuCategorias();
                 case "2" -> menuProductos();
                 case "3" -> menuReportes();
+                case "4" -> regenerarDatos();
                 case "0" -> salir = true;
                 default -> imprimirError("Opcion invalida.");
             }
+        }
+    }
+
+    private void regenerarDatos() {
+        imprimirTitulo("Regenerar datos");
+        String confirmacion = entrada.leerOpcion(
+                prompt("Esta operacion borra la base local y vuelve a cargar la semilla. Confirma? (s/n)"),
+                Set.of("s", "n")
+        );
+        if ("n".equals(confirmacion)) {
+            imprimirMensaje("Operacion cancelada.");
+            return;
+        }
+
+        try {
+            PersistenciaInicial.ResumenPersistencia resumen = regeneradorDatos.get();
+            imprimirMensaje("Base local regenerada correctamente.");
+            imprimirMensaje("Usuarios: " + resumen.usuarios()
+                    + " | Categorias: " + resumen.categorias()
+                    + " | Productos: " + resumen.productos()
+                    + " | Pedidos: " + resumen.pedidos());
+        } catch (RuntimeException exception) {
+            imprimirError("No se pudo regenerar la base local: " + exception.getMessage());
         }
     }
 
@@ -412,6 +452,7 @@ public class Main {
         imprimirOpcion("1", "Categorias");
         imprimirOpcion("2", "Productos");
         imprimirOpcion("3", "Reportes");
+        imprimirOpcion("4", "Regenerar datos");
         imprimirOpcion("0", "Salir");
         System.out.println(SEPARADOR);
     }

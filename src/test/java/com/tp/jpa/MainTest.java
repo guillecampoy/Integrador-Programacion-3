@@ -4,6 +4,8 @@ import com.tp.jpa.model.Categoria;
 import com.tp.jpa.model.Producto;
 import com.tp.jpa.repository.CategoriaRepository;
 import com.tp.jpa.repository.ProductoRepository;
+import com.tp.jpa.seed.PersistenciaInicial;
+import com.tp.jpa.service.CatalogoService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,6 +15,7 @@ import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -199,6 +202,51 @@ class MainTest {
         ejecutar(main);
         String output = outContent.toString();
         assertTrue(output.contains("Opcion invalida"));
+    }
+
+    @Test
+    void testRegenerarDatosDesdeMenuPrincipal() {
+        FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
+        FakeProductoRepository prodRepo = new FakeProductoRepository();
+        AtomicBoolean regenerado = new AtomicBoolean(false);
+        Scanner scanner = new Scanner("4\ns\n0\n");
+        Main main = new Main(
+                scanner,
+                new CatalogoService(catRepo, prodRepo),
+                () -> {
+                    regenerado.set(true);
+                    return new PersistenciaInicial.ResumenPersistencia(2, 3, 10, 10, 0, 3);
+                }
+        );
+
+        ejecutar(main);
+
+        String output = outContent.toString();
+        assertTrue(regenerado.get());
+        assertTrue(output.contains("Base local regenerada correctamente"));
+        assertTrue(output.contains("Usuarios: 2 | Categorias: 3 | Productos: 10 | Pedidos: 3"));
+    }
+
+    @Test
+    void testRegenerarDatosCanceladoNoEjecutaAccion() {
+        FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
+        FakeProductoRepository prodRepo = new FakeProductoRepository();
+        AtomicBoolean regenerado = new AtomicBoolean(false);
+        Scanner scanner = new Scanner("4\nn\n0\n");
+        Main main = new Main(
+                scanner,
+                new CatalogoService(catRepo, prodRepo),
+                () -> {
+                    regenerado.set(true);
+                    return new PersistenciaInicial.ResumenPersistencia(2, 3, 10, 10, 0, 3);
+                }
+        );
+
+        ejecutar(main);
+
+        String output = outContent.toString();
+        assertFalse(regenerado.get());
+        assertTrue(output.contains("Operacion cancelada"));
     }
 
     // ===== CATEGORIA TESTS =====

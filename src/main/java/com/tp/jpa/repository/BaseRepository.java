@@ -4,22 +4,19 @@ import com.tp.jpa.model.Base;
 import com.tp.jpa.util.JPAUtil;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
 
 import java.util.List;
 import java.util.Optional;
 
 public abstract class BaseRepository<T> {
     private final Class<T> entityClass;
-    private final EntityManagerFactory entityManagerFactory;
 
     protected BaseRepository(Class<T> entityClass) {
         this.entityClass = entityClass;
-        this.entityManagerFactory = JPAUtil.getEntityManagerFactory();
     }
 
     public T guardar(T entity) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        EntityManager entityManager = crearEntityManager();
         try {
             entityManager.getTransaction().begin();
             T merged = entityManager.merge(entity);
@@ -36,7 +33,7 @@ public abstract class BaseRepository<T> {
     }
 
     public Optional<T> buscarPorId(Long id) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        EntityManager entityManager = crearEntityManager();
         try {
             return Optional.ofNullable(entityManager.find(entityClass, id));
         } finally {
@@ -45,7 +42,7 @@ public abstract class BaseRepository<T> {
     }
 
     public List<T> listarActivos() {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        EntityManager entityManager = crearEntityManager();
         try {
             return entityManager.createQuery(
                             "select e from " + entityName() + " e where e.eliminado = false",
@@ -58,7 +55,7 @@ public abstract class BaseRepository<T> {
     }
 
     public boolean eliminarLogico(Long id) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        EntityManager entityManager = crearEntityManager();
         try {
             entityManager.getTransaction().begin();
             T entity = entityManager.find(entityClass, id);
@@ -81,7 +78,7 @@ public abstract class BaseRepository<T> {
     }
 
     public long siguienteId() {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        EntityManager entityManager = crearEntityManager();
         try {
             Long maxId = entityManager.createQuery(
                             "select coalesce(max(e.id), 0) from " + entityName() + " e",
@@ -99,6 +96,10 @@ public abstract class BaseRepository<T> {
             throw new IllegalArgumentException("La entidad no hereda de Base: " + entityClass.getName());
         }
         base.setEliminado(true);
+    }
+
+    private EntityManager crearEntityManager() {
+        return JPAUtil.getEntityManagerFactory().createEntityManager();
     }
 
     private String entityName() {
