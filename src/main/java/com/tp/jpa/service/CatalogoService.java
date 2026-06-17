@@ -11,6 +11,8 @@ public class CatalogoService {
   private final CategoriaRepository categoriaRepository;
   private final ProductoRepository productoRepository;
 
+  public record BajaCategoriaResultado(Categoria categoria, List<Producto> productosDadosDeBaja) {}
+
   public CatalogoService(
       CategoriaRepository categoriaRepository, ProductoRepository productoRepository) {
     this.categoriaRepository = categoriaRepository;
@@ -57,13 +59,19 @@ public class CatalogoService {
     return categoriaRepository.guardar(categoria);
   }
 
-  public Categoria bajaCategoria(Long id) {
+  public BajaCategoriaResultado bajaCategoria(Long id) {
     validarId(id, "categoria");
     Categoria categoria = obtenerCategoria(id);
     if (Boolean.TRUE.equals(categoria.getEliminado())) {
       throw new IllegalStateException("Error: la categoria ya se encuentra dada de baja.");
     }
-    return categoriaRepository.cambiarEstadoEliminado(id, true);
+    List<Producto> productosActivos = productoRepository.buscarPorCategoria(id);
+    List<Producto> productosDadosDeBaja =
+        productosActivos.stream()
+            .map(producto -> productoRepository.cambiarEstadoEliminado(producto.getId(), true))
+            .toList();
+    Categoria categoriaBaja = categoriaRepository.cambiarEstadoEliminado(id, true);
+    return new BajaCategoriaResultado(categoriaBaja, productosDadosDeBaja);
   }
 
   public Categoria restaurarCategoria(Long id) {
@@ -146,6 +154,11 @@ public class CatalogoService {
     Producto producto = obtenerProductoPorId(id);
     if (!Boolean.TRUE.equals(producto.getEliminado())) {
       throw new IllegalStateException("Error: el producto ya se encuentra activo.");
+    }
+    if (producto.getCategoria() != null
+        && Boolean.TRUE.equals(producto.getCategoria().getEliminado())) {
+      throw new IllegalStateException(
+          "Error: no se puede restaurar el producto porque su categoria se encuentra dada de baja.");
     }
     return productoRepository.cambiarEstadoEliminado(id, false);
   }

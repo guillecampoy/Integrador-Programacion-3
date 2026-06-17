@@ -295,6 +295,7 @@ public class Main {
 
     System.out.println("Valores actuales:");
     System.out.println("Nombre actual: " + producto.getNombre());
+    System.out.println("Descripcion actual: " + producto.getDescripcion());
     System.out.println("Precio actual: " + producto.getPrecio());
     System.out.println("Stock actual: " + producto.getStock());
 
@@ -423,8 +424,9 @@ public class Main {
             "Error: ingrese un ID numerico mayor a 0.");
 
     try {
-      Categoria categoria = catalogoService.bajaCategoria(id);
-      imprimirMensaje("Categoria dada de baja correctamente: " + categoria.getNombre());
+      CatalogoService.BajaCategoriaResultado resultado = catalogoService.bajaCategoria(id);
+      imprimirMensaje("Categoria dada de baja correctamente: " + resultado.categoria().getNombre());
+      imprimirReporteBajaCategoria(resultado.productosDadosDeBaja());
     } catch (RuntimeException exception) {
       imprimirError(exception.getMessage());
     }
@@ -503,6 +505,8 @@ public class Main {
             + producto.getId()
             + " | Nombre: "
             + producto.getNombre()
+            + " | Descripcion: "
+            + producto.getDescripcion()
             + " | Precio: "
             + producto.getPrecio()
             + " | Stock: "
@@ -517,10 +521,23 @@ public class Main {
             + producto.getId()
             + " | Nombre: "
             + producto.getNombre()
+            + " | Descripcion: "
+            + producto.getDescripcion()
             + " | Precio: "
             + producto.getPrecio()
             + " | Stock: "
             + producto.getStock());
+  }
+
+  private void imprimirReporteBajaCategoria(List<Producto> productosDadosDeBaja) {
+    if (productosDadosDeBaja.isEmpty()) {
+      imprimirMensaje("No habia productos activos asociados para dar de baja.");
+      return;
+    }
+
+    System.out.println(
+        "Productos dados de baja por cascada (" + productosDadosDeBaja.size() + "):");
+    productosDadosDeBaja.forEach(this::imprimirProducto);
   }
 
   private void mostrarMenuPrincipal() {

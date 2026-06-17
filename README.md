@@ -14,9 +14,10 @@ La aplicacion de consola permite:
 4. Listado de productos activos.
 5. Reversion de baja logica en categorias y productos.
 6. Baja logica mediante el campo `eliminado`.
-7. Reporte de productos activos por categoria usando JPQL.
-8. Persistencia JPA/Hibernate con H2.
-9. Carga inicial de datos de ejemplo.
+7. Baja logica en cascada de productos cuando se elimina una categoria.
+8. Reporte de productos activos por categoria usando JPQL.
+9. Persistencia JPA/Hibernate con H2.
+10. Carga inicial de datos de ejemplo.
 
 ## Estructura
 
@@ -88,7 +89,7 @@ La semilla tampoco fija IDs manuales; arma relaciones con referencias a objetos.
 public T guardar(T entity);
 public Optional<T> buscarPorId(Long id);
 public List<T> listarActivos();
-public boolean eliminarLogico(Long id);
+public T cambiarEstadoEliminado(Long id, boolean eliminado);
 ```
 
 Cada metodo abre y cierra su propio `EntityManager`. Las escrituras usan transaccion, `merge()` y rollback ante error.
@@ -111,6 +112,7 @@ where p.categoria.id = :categoriaId
 4. Validar existencia y estado activo.
 5. Validar entrada antes de construir o mutar entidades.
 6. Obtener listados activos para consola y reportes.
+7. Al dar de baja una categoria, desactivar en cascada sus productos activos y mostrar un breve reporte de los afectados.
 
 Validaciones defensivas en servicio:
 
@@ -190,6 +192,7 @@ La base local no se versiona. Hibernate la crea automaticamente al ejecutar la a
 
 Al iniciar la aplicacion se aplica la semilla solo cuando la base local no existe o no tiene registros. Para volver a cargar una base limpia desde cero, usar la opcion `Regenerar datos` del menu principal; esa accion borra los archivos locales de H2, recrea el esquema nuevo y vuelve a aplicar la semilla.
 La opcion `Revertir baja logica` muestra solo registros eliminados para evitar restauraciones accidentales.
+La baja logica de una categoria desactiva tambien sus productos activos asociados para evitar dejar referencias funcionales incongruentes; la consola muestra un reporte breve de esos productos.
 
 ## Ejecucion
 

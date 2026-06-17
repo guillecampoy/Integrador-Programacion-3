@@ -130,6 +130,27 @@ class CatalogoServiceTest {
   }
 
   @Test
+  void bajaCategoriaDesactivaProductosActivosAsociadosYReportaCualesSeAfectan() {
+    FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+    FakeProductoRepository productoRepository = new FakeProductoRepository();
+    Categoria categoria = crearCategoria(1L, "Bebidas", false);
+    Producto activo = crearProducto(1L, "Cafe", categoria, false);
+    Producto yaEliminado = crearProducto(2L, "Te", categoria, true);
+    categoriaRepository.add(categoria);
+    productoRepository.add(activo);
+    productoRepository.add(yaEliminado);
+    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+
+    CatalogoService.BajaCategoriaResultado resultado = service.bajaCategoria(1L);
+
+    assertTrue(resultado.categoria().getEliminado());
+    assertEquals(1, resultado.productosDadosDeBaja().size());
+    assertEquals("Cafe", resultado.productosDadosDeBaja().get(0).getNombre());
+    assertTrue(productoRepository.buscarPorId(1L).orElseThrow().getEliminado());
+    assertTrue(productoRepository.buscarPorId(2L).orElseThrow().getEliminado());
+  }
+
+  @Test
   void restaurarCategoriaYProductoValidanEstadoYReactivanEntidad() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     FakeProductoRepository productoRepository = new FakeProductoRepository();
@@ -146,6 +167,40 @@ class CatalogoServiceTest {
     assertFalse(productoRestaurado.getEliminado());
     assertThrows(IllegalStateException.class, () -> service.restaurarCategoria(1L));
     assertThrows(IllegalStateException.class, () -> service.restaurarProducto(1L));
+  }
+
+  @Test
+  void restaurarProductoRechazaSiCategoriaEstaEliminada() {
+    FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+    FakeProductoRepository productoRepository = new FakeProductoRepository();
+    Categoria categoria = crearCategoria(1L, "Bebidas", true);
+    Producto producto = crearProducto(1L, "Cafe", categoria, true);
+    categoriaRepository.add(categoria);
+    productoRepository.add(producto);
+    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+
+    IllegalStateException exception =
+        assertThrows(IllegalStateException.class, () -> service.restaurarProducto(1L));
+
+    assertEquals(
+        "Error: no se puede restaurar el producto porque su categoria se encuentra dada de baja.",
+        exception.getMessage());
+    assertTrue(productoRepository.buscarPorId(1L).orElseThrow().getEliminado());
+  }
+
+  @Test
+  void restaurarProductoPermiteSiCategoriaEstaActiva() {
+    FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+    FakeProductoRepository productoRepository = new FakeProductoRepository();
+    Categoria categoria = crearCategoria(1L, "Bebidas", false);
+    Producto producto = crearProducto(1L, "Cafe", categoria, true);
+    categoriaRepository.add(categoria);
+    productoRepository.add(producto);
+    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+
+    Producto productoRestaurado = service.restaurarProducto(1L);
+
+    assertFalse(productoRestaurado.getEliminado());
   }
 
   @Test

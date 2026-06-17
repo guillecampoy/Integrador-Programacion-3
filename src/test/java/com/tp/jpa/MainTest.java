@@ -334,13 +334,22 @@ class MainTest {
     FakeProductoRepository prodRepo = new FakeProductoRepository();
     Categoria c = crearCategoria(1, "ParaBorrar");
     catRepo.add(c);
+    Producto activo = crearProducto(1, "Cafe", 50.0, 3, c);
+    Producto eliminado = crearProducto(2, "Te", 40.0, 2, c);
+    eliminado.setEliminado(true);
+    prodRepo.add(activo);
+    prodRepo.add(eliminado);
     assertFalse(c.getEliminado());
     Scanner scanner = new Scanner("1\n3\n1\n0\n0\n");
     Main main = new Main(scanner, catRepo, prodRepo);
     ejecutar(main);
     String output = outContent.toString();
     assertTrue(output.contains("Categoria dada de baja correctamente"));
+    assertTrue(output.contains("Productos dados de baja por cascada"));
+    assertTrue(output.contains("Cafe"));
     assertTrue(catRepo.buscarPorId(1L).map(Categoria::getEliminado).orElse(false));
+    assertTrue(prodRepo.buscarPorId(1L).map(Producto::getEliminado).orElse(false));
+    assertTrue(prodRepo.buscarPorId(2L).map(Producto::getEliminado).orElse(false));
   }
 
   @Test
@@ -553,6 +562,7 @@ class MainTest {
     String output = outContent.toString();
     assertTrue(output.contains("Productos activos"));
     assertTrue(output.contains("Cafe"));
+    assertTrue(output.contains("Desc Cafe"));
     assertFalse(output.contains("Archivado"));
   }
 
@@ -601,6 +611,7 @@ class MainTest {
     String output = outContent.toString();
     assertTrue(output.contains("Productos activos de la categoria"));
     assertTrue(output.contains("Cafe"));
+    assertTrue(output.contains("Desc Cafe"));
   }
 
   @Test
