@@ -1,6 +1,6 @@
-package com.tp.jpa.utils;
+package com.tp.jpa.util;
 
-import com.tp.jpa.utils.EntradaValidada;
+import com.tp.jpa.util.EntradaValidada;
 import org.junit.jupiter.api.Test;
 
 import java.util.Scanner;

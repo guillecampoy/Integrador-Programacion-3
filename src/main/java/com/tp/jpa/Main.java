@@ -2,7 +2,7 @@ package com.tp.jpa;
 
 import com.tp.jpa.model.Categoria;
 import com.tp.jpa.model.Producto;
-import com.tp.jpa.utils.EntradaValidada;
+import com.tp.jpa.util.EntradaValidada;
 import com.tp.jpa.repository.CategoriaRepository;
 import com.tp.jpa.repository.ProductoRepository;
 import com.tp.jpa.service.CatalogoService;
@@ -12,12 +12,12 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 
-import static com.tp.jpa.utils.ConsolaUtils.SEPARADOR;
-import static com.tp.jpa.utils.ConsolaUtils.imprimirError;
-import static com.tp.jpa.utils.ConsolaUtils.imprimirMensaje;
-import static com.tp.jpa.utils.ConsolaUtils.imprimirOpcion;
-import static com.tp.jpa.utils.ConsolaUtils.imprimirTitulo;
-import static com.tp.jpa.utils.ConsolaUtils.prompt;
+import static com.tp.jpa.util.ConsolaUtils.SEPARADOR;
+import static com.tp.jpa.util.ConsolaUtils.imprimirError;
+import static com.tp.jpa.util.ConsolaUtils.imprimirMensaje;
+import static com.tp.jpa.util.ConsolaUtils.imprimirOpcion;
+import static com.tp.jpa.util.ConsolaUtils.imprimirTitulo;
+import static com.tp.jpa.util.ConsolaUtils.prompt;
 
 public class Main {
     private final Scanner scanner;

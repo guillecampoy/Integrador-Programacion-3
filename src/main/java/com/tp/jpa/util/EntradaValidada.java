@@ -1,6 +1,6 @@
-package com.tp.jpa.utils;
+package com.tp.jpa.util;
 
-import static com.tp.jpa.utils.ConsolaUtils.imprimirError;
+import static com.tp.jpa.util.ConsolaUtils.imprimirError;
 
 import java.util.Set;
 import java.util.Scanner;

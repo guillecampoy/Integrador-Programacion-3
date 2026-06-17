@@ -46,7 +46,6 @@ src/main/java/com/tp/jpa/
     PersistenciaInicial.java
   util/
     JPAUtil.java
-  utils/
     ConsolaUtils.java
     EntradaValidada.java
 ```
