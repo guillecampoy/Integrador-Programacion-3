@@ -21,8 +21,16 @@ public class CatalogoService {
         return categoriaRepository.listarActivos();
     }
 
+    public List<Categoria> listarCategoriasEliminadas() {
+        return categoriaRepository.listarEliminados();
+    }
+
     public List<Producto> listarProductosActivos() {
         return productoRepository.listarActivos();
+    }
+
+    public List<Producto> listarProductosEliminados() {
+        return productoRepository.listarEliminados();
     }
 
     public Categoria crearCategoria(String nombre, String descripcion) {
@@ -58,6 +66,16 @@ public class CatalogoService {
         categoriaRepository.eliminarLogico(id);
         categoria.setEliminado(true);
         return categoria;
+    }
+
+    public Categoria restaurarCategoria(Long id) {
+        validarId(id, "categoria");
+        Categoria categoria = obtenerCategoriaPorId(id);
+        if (!Boolean.TRUE.equals(categoria.getEliminado())) {
+            throw new IllegalStateException("Error: la categoria ya se encuentra activa.");
+        }
+        categoria.setEliminado(false);
+        return categoriaRepository.guardar(categoria);
     }
 
     public Categoria obtenerCategoriaActiva(Long id) {
@@ -132,6 +150,16 @@ public class CatalogoService {
         return producto;
     }
 
+    public Producto restaurarProducto(Long id) {
+        validarId(id, "producto");
+        Producto producto = obtenerProductoPorId(id);
+        if (!Boolean.TRUE.equals(producto.getEliminado())) {
+            throw new IllegalStateException("Error: el producto ya se encuentra activo.");
+        }
+        producto.setEliminado(false);
+        return productoRepository.guardar(producto);
+    }
+
     public Producto obtenerProductoActivo(Long id) {
         validarId(id, "producto");
         Producto producto = obtenerProducto(id);
@@ -145,6 +173,16 @@ public class CatalogoService {
         validarId(categoriaId, "categoria");
         obtenerCategoriaActiva(categoriaId);
         return productoRepository.buscarPorCategoria(categoriaId);
+    }
+
+    private Categoria obtenerCategoriaPorId(Long id) {
+        return categoriaRepository.buscarPorId(id)
+                .orElseThrow(() -> new IllegalArgumentException("Error: no existe una categoria con el ID indicado."));
+    }
+
+    private Producto obtenerProductoPorId(Long id) {
+        return productoRepository.buscarPorId(id)
+                .orElseThrow(() -> new IllegalArgumentException("Error: no existe un producto con el ID indicado."));
     }
 
     private Categoria obtenerCategoria(Long id) {

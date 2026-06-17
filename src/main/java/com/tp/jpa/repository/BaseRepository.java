@@ -54,6 +54,19 @@ public abstract class BaseRepository<T> {
         }
     }
 
+    public List<T> listarEliminados() {
+        EntityManager entityManager = crearEntityManager();
+        try {
+            return entityManager.createQuery(
+                            "select e from " + entityName() + " e where e.eliminado = true",
+                            entityClass
+                    )
+                    .getResultList();
+        } finally {
+            entityManager.close();
+        }
+    }
+
     public boolean eliminarLogico(Long id) {
         EntityManager entityManager = crearEntityManager();
         try {

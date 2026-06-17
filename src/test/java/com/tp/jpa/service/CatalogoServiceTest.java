@@ -134,6 +134,25 @@ class CatalogoServiceTest {
     }
 
     @Test
+    void restaurarCategoriaYProductoValidanEstadoYReactivanEntidad() {
+        FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+        FakeProductoRepository productoRepository = new FakeProductoRepository();
+        Categoria categoria = crearCategoria(1L, "Bebidas", true);
+        Producto producto = crearProducto(1L, "Cafe", categoria, true);
+        categoriaRepository.add(categoria);
+        productoRepository.add(producto);
+        CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+
+        Categoria categoriaRestaurada = service.restaurarCategoria(1L);
+        Producto productoRestaurado = service.restaurarProducto(1L);
+
+        assertFalse(categoriaRestaurada.getEliminado());
+        assertFalse(productoRestaurado.getEliminado());
+        assertThrows(IllegalStateException.class, () -> service.restaurarCategoria(1L));
+        assertThrows(IllegalStateException.class, () -> service.restaurarProducto(1L));
+    }
+
+    @Test
     void reporteRechazaCategoriaInactiva() {
         FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
         FakeProductoRepository productoRepository = new FakeProductoRepository();

@@ -83,6 +83,13 @@ class MainTest {
         }
 
         @Override
+        public List<Categoria> listarEliminados() {
+            return store.values().stream()
+                    .filter(c -> Boolean.TRUE.equals(c.getEliminado()))
+                    .collect(Collectors.toList());
+        }
+
+        @Override
         public boolean eliminarLogico(Long id) {
             Categoria c = store.get(id);
             if (c == null || Boolean.TRUE.equals(c.getEliminado())) return false;
@@ -128,6 +135,13 @@ class MainTest {
         public List<Producto> listarActivos() {
             return store.values().stream()
                     .filter(p -> !Boolean.TRUE.equals(p.getEliminado()))
+                    .collect(Collectors.toList());
+        }
+
+        @Override
+        public List<Producto> listarEliminados() {
+            return store.values().stream()
+                    .filter(p -> Boolean.TRUE.equals(p.getEliminado()))
                     .collect(Collectors.toList());
         }
 
@@ -372,6 +386,33 @@ class MainTest {
         assertFalse(output.contains("Archivada"));
     }
 
+    @Test
+    void testRestaurarCategoria() {
+        FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
+        FakeProductoRepository prodRepo = new FakeProductoRepository();
+        Categoria eliminada = crearCategoria(1, "Archivada");
+        eliminada.setEliminado(true);
+        catRepo.add(eliminada);
+        Scanner scanner = new Scanner("1\n5\n1\n0\n0\n");
+        Main main = new Main(scanner, catRepo, prodRepo);
+        ejecutar(main);
+        String output = outContent.toString();
+        assertTrue(output.contains("Revertir baja logica de categoria"));
+        assertTrue(output.contains("Categoria restaurada correctamente"));
+        assertFalse(catRepo.buscarPorId(1L).map(Categoria::getEliminado).orElse(true));
+    }
+
+    @Test
+    void testRestaurarCategoriaSinEliminadas() {
+        FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
+        FakeProductoRepository prodRepo = new FakeProductoRepository();
+        Scanner scanner = new Scanner("1\n5\n0\n0\n");
+        Main main = new Main(scanner, catRepo, prodRepo);
+        ejecutar(main);
+        String output = outContent.toString();
+        assertTrue(output.contains("No hay categorias eliminadas para restaurar"));
+    }
+
     // ===== PRODUCTO TESTS =====
 
     @Test
@@ -513,6 +554,35 @@ class MainTest {
         assertTrue(output.contains("Productos activos"));
         assertTrue(output.contains("Cafe"));
         assertFalse(output.contains("Archivado"));
+    }
+
+    @Test
+    void testRestaurarProducto() {
+        FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
+        FakeProductoRepository prodRepo = new FakeProductoRepository();
+        Categoria cat = crearCategoria(1, "Bebidas");
+        catRepo.add(cat);
+        Producto eliminado = crearProducto(1, "Archivado", 100.0, 1, cat);
+        eliminado.setEliminado(true);
+        prodRepo.add(eliminado);
+        Scanner scanner = new Scanner("2\n5\n1\n0\n0\n");
+        Main main = new Main(scanner, catRepo, prodRepo);
+        ejecutar(main);
+        String output = outContent.toString();
+        assertTrue(output.contains("Revertir baja logica de producto"));
+        assertTrue(output.contains("Producto restaurado correctamente"));
+        assertFalse(prodRepo.buscarPorId(1L).map(Producto::getEliminado).orElse(true));
+    }
+
+    @Test
+    void testRestaurarProductoSinEliminados() {
+        FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
+        FakeProductoRepository prodRepo = new FakeProductoRepository();
+        Scanner scanner = new Scanner("2\n5\n0\n0\n");
+        Main main = new Main(scanner, catRepo, prodRepo);
+        ejecutar(main);
+        String output = outContent.toString();
+        assertTrue(output.contains("No hay productos eliminados para restaurar"));
     }
 
     // ===== REPORTES TESTS =====

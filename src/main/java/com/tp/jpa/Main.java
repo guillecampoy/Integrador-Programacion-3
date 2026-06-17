@@ -120,12 +120,13 @@ public class Main {
         boolean volver = false;
         while (!volver) {
             mostrarMenuProductos();
-            String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2", "3", "4"));
+            String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2", "3", "4", "5"));
             switch (opcion) {
                 case "1" -> altaProducto();
                 case "2" -> modificarProducto();
                 case "3" -> bajaProducto();
                 case "4" -> listarProductosActivos();
+                case "5" -> restaurarProducto();
                 case "0" -> volver = true;
                 default -> imprimirError("Opcion invalida.");
             }
@@ -136,12 +137,13 @@ public class Main {
         boolean volver = false;
         while (!volver) {
             mostrarMenuCategorias();
-            String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2", "3", "4"));
+            String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2", "3", "4", "5"));
             switch (opcion) {
                 case "1" -> altaCategoria();
                 case "2" -> modificarCategoria();
                 case "3" -> bajaCategoria();
                 case "4" -> listarCategoriasActivas();
+                case "5" -> restaurarCategoria();
                 case "0" -> volver = true;
                 default -> imprimirError("Opcion invalida.");
             }
@@ -166,6 +168,58 @@ public class Main {
             return;
         }
         productos.forEach(this::imprimirProducto);
+    }
+
+    private void restaurarCategoria() {
+        imprimirTitulo("Revertir baja logica de categoria");
+        List<Categoria> categorias = catalogoService.listarCategoriasEliminadas();
+        if (categorias.isEmpty()) {
+            imprimirMensaje("No hay categorias eliminadas para restaurar.");
+            return;
+        }
+
+        categorias.forEach(this::imprimirCategoria);
+        Set<Long> idsValidos = categorias.stream()
+                .map(Categoria::getId)
+                .collect(java.util.stream.Collectors.toSet());
+        long id = entrada.leerLong(
+                prompt("Ingrese ID de categoria eliminada"),
+                idsValidos::contains,
+                "Error: no existe una categoria eliminada con el ID indicado."
+        );
+
+        try {
+            Categoria categoria = catalogoService.restaurarCategoria(id);
+            imprimirMensaje("Categoria restaurada correctamente: " + categoria.getNombre());
+        } catch (RuntimeException exception) {
+            imprimirError(exception.getMessage());
+        }
+    }
+
+    private void restaurarProducto() {
+        imprimirTitulo("Revertir baja logica de producto");
+        List<Producto> productos = catalogoService.listarProductosEliminados();
+        if (productos.isEmpty()) {
+            imprimirMensaje("No hay productos eliminados para restaurar.");
+            return;
+        }
+
+        productos.forEach(this::imprimirProducto);
+        Set<Long> idsValidos = productos.stream()
+                .map(Producto::getId)
+                .collect(java.util.stream.Collectors.toSet());
+        long id = entrada.leerLong(
+                prompt("Ingrese ID de producto eliminado"),
+                idsValidos::contains,
+                "Error: no existe un producto eliminado con el ID indicado."
+        );
+
+        try {
+            Producto producto = catalogoService.restaurarProducto(id);
+            imprimirMensaje("Producto restaurado correctamente: " + producto.getNombre());
+        } catch (RuntimeException exception) {
+            imprimirError(exception.getMessage());
+        }
     }
 
     private void productosPorCategoria() {
@@ -466,6 +520,7 @@ public class Main {
         imprimirOpcion("2", "Modificar categoria");
         imprimirOpcion("3", "Baja logica de categoria");
         imprimirOpcion("4", "Listar categorias activas");
+        imprimirOpcion("5", "Revertir baja logica");
         imprimirOpcion("0", "Volver");
         System.out.println(SEPARADOR);
     }
@@ -479,6 +534,7 @@ public class Main {
         imprimirOpcion("2", "Modificar producto");
         imprimirOpcion("3", "Baja logica de producto");
         imprimirOpcion("4", "Listar productos activos");
+        imprimirOpcion("5", "Revertir baja logica");
         imprimirOpcion("0", "Volver");
         System.out.println(SEPARADOR);
     }

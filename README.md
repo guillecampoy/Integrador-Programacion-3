@@ -12,10 +12,11 @@ La aplicacion de consola permite:
 2. ABM de productos.
 3. Listado de categorias activas.
 4. Listado de productos activos.
-5. Baja logica mediante el campo `eliminado`.
-6. Reporte de productos activos por categoria usando JPQL.
-7. Persistencia JPA/Hibernate con H2.
-8. Carga inicial de datos de ejemplo.
+5. Reversion de baja logica en categorias y productos.
+6. Baja logica mediante el campo `eliminado`.
+7. Reporte de productos activos por categoria usando JPQL.
+8. Persistencia JPA/Hibernate con H2.
+9. Carga inicial de datos de ejemplo.
 
 ## Estructura
 
@@ -139,6 +140,7 @@ Categorias:
 2. Modificar categoria
 3. Baja logica de categoria
 4. Listar categorias activas
+5. Revertir baja logica
 0. Volver
 ```
 
@@ -149,6 +151,7 @@ Productos:
 2. Modificar producto
 3. Baja logica de producto
 4. Listar productos activos
+5. Revertir baja logica
 0. Volver
 ```
 
@@ -186,6 +189,7 @@ jdbc:h2:file:./data/jpa_db
 La base local no se versiona. Hibernate la crea automaticamente al ejecutar la aplicacion si no existe. La configuracion local usa `hibernate.hbm2ddl.auto=update`, por lo que no borra datos en cada arranque.
 
 Al iniciar la aplicacion se aplica la semilla solo cuando la base local no existe o no tiene registros. Para volver a cargar una base limpia desde cero, usar la opcion `Regenerar datos` del menu principal; esa accion borra los archivos locales de H2, recrea el esquema nuevo y vuelve a aplicar la semilla.
+La opcion `Revertir baja logica` muestra solo registros eliminados para evitar restauraciones accidentales.
 
 ## Ejecucion
 
@@ -295,7 +299,19 @@ En la consola:
 3. Mostrar el resumen de registros cargados.
 4. Aclarar que la base local no se versiona y que la regeneracion aplica nuevamente la semilla sobre un esquema limpio.
 
-### 5. Demo de Categorias
+### 5. Demo de Reversion de Baja
+
+Duracion sugerida: 1 minuto.
+
+En la consola:
+
+1. Entrar a `Categorias` o `Productos`.
+2. Elegir `Revertir baja logica`.
+3. Mostrar que solo aparecen elementos eliminados.
+4. Restaurar uno.
+5. Confirmar que vuelve a figurar en los listados activos.
+
+### 6. Demo de Categorias
 
 Duracion sugerida: 2 minutos.
 
@@ -309,7 +325,7 @@ En la consola:
 6. Dar de baja una categoria.
 7. Confirmar que no aparece en el listado activo.
 
-### 6. Demo de Productos
+### 7. Demo de Productos
 
 Duracion sugerida: 3 minutos.
 
@@ -324,7 +340,7 @@ En la consola:
 7. Dar de baja un producto.
 8. Confirmar que no aparece en productos activos.
 
-### 7. Demo de Reporte por Categoria
+### 8. Demo de Reporte por Categoria
 
 Duracion sugerida: 2 minutos.
 
@@ -336,7 +352,7 @@ En la consola:
 4. Mostrar productos con ID, nombre, precio y stock.
 5. Luego de bajar un producto, repetir el reporte y confirmar que ya no aparece.
 
-### 8. Tests y Cierre
+### 9. Tests y Cierre
 
 Duracion sugerida: 2 minutos.
 
