@@ -4,7 +4,6 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -34,35 +33,7 @@ public final class JPAUtil {
         agregarPropiedadSiExiste(propiedades, "jakarta.persistence.jdbc.url", "com.tp.jpa.jdbc.url");
         agregarPropiedadSiExiste(propiedades, "hibernate.hbm2ddl.auto", "com.tp.jpa.hbm2ddl.auto");
 
-        EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("miUnidad", propiedades);
-        sincronizarSecuenciasH2(entityManagerFactory);
-        return entityManagerFactory;
-    }
-
-    private static void sincronizarSecuenciasH2(EntityManagerFactory entityManagerFactory) {
-        List<String> entidades = List.of("Usuario", "Categoria", "Producto", "Pedido", "DetallePedido");
-        var entityManager = entityManagerFactory.createEntityManager();
-        try {
-            entityManager.getTransaction().begin();
-            for (String entidad : entidades) {
-                Number maxId = (Number) entityManager.createNativeQuery(
-                                "select coalesce(max(id), 0) from " + entidad
-                        )
-                        .getSingleResult();
-                long siguienteId = maxId.longValue() + 1;
-                entityManager.createNativeQuery(
-                                "alter sequence " + entidad + "_SEQ restart with " + siguienteId
-                        )
-                        .executeUpdate();
-            }
-            entityManager.getTransaction().commit();
-        } catch (RuntimeException exception) {
-            if (entityManager.getTransaction().isActive()) {
-                entityManager.getTransaction().rollback();
-            }
-        } finally {
-            entityManager.close();
-        }
+        return Persistence.createEntityManagerFactory("miUnidad", propiedades);
     }
 
     private static void agregarPropiedadSiExiste(

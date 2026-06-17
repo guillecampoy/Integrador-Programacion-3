@@ -102,10 +102,10 @@ class CategoriaRepositoryTest {
 
     @Test
     void testSiguienteId() {
-        long siguienteIdInicial = repository.siguienteId();
+        assertEquals(1L, repository.siguienteId());
         Categoria c = crearCategoria("Test");
         repository.guardar(c);
-        assertTrue(repository.siguienteId() > siguienteIdInicial);
+        assertEquals(2L, repository.siguienteId());
     }
 
     @Test

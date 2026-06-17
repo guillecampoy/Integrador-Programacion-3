@@ -71,7 +71,7 @@ No se modifico `docs/diagrama.puml`.
 
 ```java
 @Id
-@GeneratedValue(strategy = GenerationType.AUTO)
+@GeneratedValue(strategy = GenerationType.IDENTITY)
 private Long id;
 ```
 
@@ -179,11 +179,10 @@ com.tp.jpa.model.DetallePedido
 La base local usa H2 en archivo:
 
 ```text
-jdbc:h2:file:./data/jpa_db;AUTO_SERVER=TRUE
+jdbc:h2:file:./data/jpa_db
 ```
 
-Si existe una base vieja creada antes de los IDs autogenerados, borrar `data/jpa_db.mv.db` antes de probar altas nuevas.
-La aplicacion usa `GenerationType.AUTO` para que Hibernate genere los IDs sin depender de valores manuales y para evitar errores de tablas H2 antiguas cuyo `ID` no fue creado como identity.
+La base local no se versiona. Hibernate la crea automaticamente al ejecutar la aplicacion y la configuracion local usa `hibernate.hbm2ddl.auto=create`.
 
 ## Ejecucion
 

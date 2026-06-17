@@ -46,7 +46,7 @@ public class PersistenciaInicial implements AutoCloseable {
         PersistenciaInicial persistenciaInicial = new PersistenciaInicial(
                 BASE_LOCAL,
                 ARCHIVOS_BASE_LOCAL,
-                "jdbc:h2:file:./data/jpa_db;AUTO_SERVER=TRUE"
+                "jdbc:h2:file:./data/jpa_db"
         );
         persistenciaInicial.persistirDatosInicialesSiCorresponde();
         return persistenciaInicial;

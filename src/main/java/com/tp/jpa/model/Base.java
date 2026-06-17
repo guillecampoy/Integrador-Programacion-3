@@ -19,7 +19,7 @@ import java.util.Objects;
 @ToString
 public abstract class Base {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private Boolean eliminado;
     private LocalDateTime createdAt;
