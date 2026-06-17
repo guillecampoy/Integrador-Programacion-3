@@ -1,262 +1,375 @@
-# TP JPA
+# Parcial 2 - Programacion III - JPA
 
-Trabajo practico de Programacion III orientado a persistir el modelo de dominio con JPA e Hibernate.
+Entrega final del parcial de Java Persistence API sobre repositorios, ABM de categorias/productos y consulta JPQL por categoria.
 
-La consigna se encuentra en [docs/TP - JPA.pdf](docs/TP%20-%20JPA.pdf), que se toma como fuente absoluta del entregable.
+El proyecto queda unificado bajo la paqueteria `com.tp.jpa`, con una unica clase de entrada `com.tp.jpa.Main`. El modelo respeta las relaciones del UML de `docs/diagrama.puml`; ese archivo no fue modificado.
 
-## Alcance de esta version
+## Funcionalidades
 
-- Se reviso la implementacion contra los puntos expresados en `docs/TP - JPA.pdf`.
-- No se modifico [docs/diagrama.puml](docs/diagrama.puml).
-- El UML se mantiene como diagrama representativo del dominio: no incluye menus, consola, persistencia auxiliar ni helpers.
-- No se alteraron las relaciones entre clases alcanzadas por el UML sin confirmacion explicita.
-- La verificacion final se ejecuto con `./gradlew build`.
-- Las entidades usan igualdad basada en `id` no nulo y validaciones basicas en setters para proteger datos editables.
+La aplicacion de consola permite:
 
-## Objetivo
+1. ABM de categorias.
+2. ABM de productos.
+3. Listado de categorias activas.
+4. Listado de productos activos.
+5. Reversion de baja logica en categorias y productos.
+6. Baja logica mediante el campo `eliminado`.
+7. Baja logica en cascada de productos cuando se elimina una categoria.
+8. Reporte de productos activos por categoria usando JPQL.
+9. Persistencia JPA/Hibernate con H2.
+10. Carga inicial de datos de ejemplo.
 
-Disenar e implementar un modelo de dominio persistente utilizando JPA sobre las clases generadas en la practica de Lombok y DTO.
+## Estructura
 
-El trabajo debe permitir:
+```text
+src/main/java/com/tp/jpa/
+  Main.java                      # unica entrada de consola
+  H2LocalConsole.java            # consola web H2 opcional
+  model/
+    Base.java                    # clase base con id, eliminado y createdAt
+    Categoria.java
+    Producto.java
+    Usuario.java
+    Pedido.java
+    DetallePedido.java
+    Calculable.java
+    enums/
+      Estado.java
+      FormaPago.java
+      Rol.java
+  repository/
+    BaseRepository.java
+    CategoriaRepository.java
+    ProductoRepository.java
+  service/
+    CatalogoService.java         # reglas de negocio y validaciones
+  seed/
+    DatosSemillaFactory.java
+    PersistenciaInicial.java
+  util/
+    JPAUtil.java
+    ConsolaUtils.java
+    EntradaValidada.java
+```
 
-- Persistir objetos en una base de datos relacional.
-- Comprender el ciclo de vida de una entidad.
-- Realizar operaciones CRUD sobre el modelo.
+Los tests estan en `src/test/java/com/tp/jpa/` y cubren entidades, repositorios, servicio, consola, persistencia inicial e integracion JPA.
 
-## Consigna
+## Modelo
 
-Segun el documento del TP, el proyecto debe incorporar:
+Las entidades conservan las relaciones indicadas en el UML:
 
-- Libreria de Hibernate.
-- Archivo `persistence.xml`.
-- Anotaciones JPA para entidades, ids y relaciones.
-- Persistencia inicial de datos:
-  - 2 usuarios.
-  - 3 pedidos, con al menos 2 detalles por pedido.
-  - 3 categorias.
-  - 10 productos.
-- Actualizacion de al menos 2 productos.
-- Busqueda de usuario por id.
-- Busqueda de usuario por mail.
-- Borrado de 1 producto.
+1. `Usuario` hereda de `Base` y se relaciona con muchos `Pedido`.
+2. `Categoria` hereda de `Base` y agrupa muchos `Producto`.
+3. `Producto` hereda de `Base` y referencia una `Categoria`.
+4. `Pedido` hereda de `Base`, implementa `Calculable`, pertenece a un `Usuario` y compone muchos `DetallePedido`.
+5. `DetallePedido` hereda de `Base` y referencia un `Producto`.
+6. `UsuarioDTO` depende de `Usuario`.
 
-## Estructura esperada para JPA
+No se modifico `docs/diagrama.puml`.
 
-El archivo de configuracion de persistencia debe ubicarse en:
+## IDs Autogenerados
+
+`Base` centraliza el identificador y delega la generacion a JPA:
+
+```java
+@Id
+@GeneratedValue(strategy = GenerationType.IDENTITY)
+private Long id;
+```
+
+Las altas crean entidades con `id == null`. El ID se obtiene despues de persistir usando la instancia retornada por `guardar(...)` o la entidad administrada por JPA.
+
+La semilla tampoco fija IDs manuales; arma relaciones con referencias a objetos.
+
+## Repositorios
+
+`BaseRepository<T>` implementa:
+
+```java
+public T guardar(T entity);
+public Optional<T> buscarPorId(Long id);
+public List<T> listarActivos();
+public T cambiarEstadoEliminado(Long id, boolean eliminado);
+```
+
+Cada metodo abre y cierra su propio `EntityManager`. Las escrituras usan transaccion, `merge()` y rollback ante error.
+
+`ProductoRepository.buscarPorCategoria(Long categoriaId)` usa JPQL tipado y parametro nombrado:
+
+```jpql
+select p from Producto p
+where p.categoria.id = :categoriaId
+  and p.eliminado = false
+```
+
+## Capa de Servicio
+
+`CatalogoService` separa la logica de negocio de la consola. Se encarga de:
+
+1. Crear categorias y productos.
+2. Modificar categorias y productos.
+3. Ejecutar bajas logicas.
+4. Validar existencia y estado activo.
+5. Validar entrada antes de construir o mutar entidades.
+6. Obtener listados activos para consola y reportes.
+7. Al dar de baja una categoria, desactivar en cascada sus productos activos y mostrar un breve reporte de los afectados.
+
+Validaciones defensivas en servicio:
+
+1. IDs obligatorios y mayores a 0.
+2. Nombre y descripcion obligatorios en altas.
+3. Precio de producto mayor a 0.
+4. Stock mayor o igual a 0.
+5. En modificaciones, campos vacios conservan el valor previo; campos presentes se validan antes de tocar la entidad.
+
+## Menu de Consola
+
+Menu principal:
+
+```text
+Sistema JPA - Categorias y Productos
+1. Categorias
+2. Productos
+3. Reportes
+4. Regenerar datos
+0. Salir
+```
+
+Categorias:
+
+```text
+1. Alta de categoria
+2. Modificar categoria
+3. Baja logica de categoria
+4. Listar categorias activas
+5. Revertir baja logica
+0. Volver
+```
+
+Productos:
+
+```text
+1. Alta de producto
+2. Modificar producto
+3. Baja logica de producto
+4. Listar productos activos
+5. Revertir baja logica
+0. Volver
+```
+
+Reportes:
+
+```text
+1. Productos por categoria
+0. Volver
+```
+
+## Configuracion JPA
+
+La unidad de persistencia es `miUnidad`, definida en:
 
 ```text
 src/main/resources/META-INF/persistence.xml
 ```
 
-La unidad de persistencia indicada por la consigna es:
-
-```xml
-<persistence-unit name="miUnidad" transaction-type="RESOURCE_LOCAL">
-```
-
-La base de datos sugerida por la consigna es H2 en archivo. La aplicacion usa la misma base local y agrega `AUTO_SERVER=TRUE` para permitir conectarse desde la consola web de H2 mientras el programa esta en ejecucion:
+Entidades registradas:
 
 ```text
-jdbc:h2:file:./data/jpa_db;AUTO_SERVER=TRUE
+com.tp.jpa.model.Usuario
+com.tp.jpa.model.Categoria
+com.tp.jpa.model.Producto
+com.tp.jpa.model.Pedido
+com.tp.jpa.model.DetallePedido
 ```
 
-La carpeta `data/` no se versiona. La aplicacion genera nuevamente la base local cuando no detecta `data/jpa_db.mv.db`.
+La base local usa H2 en archivo:
 
-Las clases del dominio deben anotarse como entidades JPA y registrar sus relaciones correspondientes.
+```text
+jdbc:h2:file:./data/jpa_db
+```
 
-## Integridad de entidades
+La base local no se versiona. Hibernate la crea automaticamente al ejecutar la aplicacion si no existe. La configuracion local usa `hibernate.hbm2ddl.auto=update`, por lo que no borra datos en cada arranque.
 
-La clase `Base` centraliza reglas compartidas:
-
-- `equals` compara entidades de la misma clase concreta usando `id` no nulo.
-- `hashCode` se basa en la clase concreta para mantener consistencia con entidades JPA.
-- `createdAt` y otros campos mutables no participan en la igualdad.
-- El setter de `id` rechaza valores menores o iguales a 0.
-
-Las entidades concretas agregan validaciones basicas en setters para evitar textos vacios, numeros negativos, precios no positivos, valores booleanos nulos y detalles de pedido sin producto o sin cantidad valida.
-
-`DetallePedido` usa el `Producto` referenciado como identidad logica. Si se agrega el mismo producto mas de una vez al mismo `Pedido`, se conserva un unico detalle y se acumulan cantidad, subtotal y total.
-
-## Modelo del proyecto
-
-El diagrama del modelo se encuentra en [docs/diagrama.puml](docs/diagrama.puml).
-
-El diagrama se conserva acotado a clases representativas del modelo y sus relaciones principales. Las clases de menu, consola, persistencia inicial, validacion de entrada y otros helpers no forman parte del UML para mantenerlo enfocado en el dominio pedido por el TP.
-
-Entidades del dominio:
-
-- `Base`
-- `Usuario`
-- `Categoria`
-- `Producto`
-- `Pedido`
-- `DetallePedido`
-
-Relaciones principales:
-
-- `Usuario` tiene una coleccion de `Pedido`.
-- `Pedido` pertenece a un `Usuario`.
-- `Pedido` tiene una coleccion de `DetallePedido`.
-- `DetallePedido` referencia un `Producto`.
-- `Producto` pertenece a una `Categoria`.
-- `Categoria` tiene una coleccion de `Producto`.
-
-Enums:
-
-- `Estado`
-- `FormaPago`
-- `Rol`
-
-DTO y datos semilla:
-
-- `UsuarioDTO`
-- `DatosSemilla`
-- `DatosSemillaFactory`
-
-Interfaz:
-
-- `Calculable`
-
-## Datos de prueba actuales
-
-La clase `DatosSemillaFactory` instancia datos en memoria que sirven como base para el TP JPA:
-
-- 2 usuarios.
-- 3 categorias.
-- 10 productos.
-- 3 pedidos.
-- Cada pedido tiene al menos 2 detalles.
-
-La persistencia inicial guarda exactamente 10 productos, segun la consigna.
-
-## Operaciones JPA requeridas
-
-La implementacion del TP debe cubrir el siguiente flujo:
-
-1. Crear un `EntityManagerFactory` usando la unidad `miUnidad`.
-2. Crear un `EntityManager`.
-3. Abrir una transaccion.
-4. Persistir usuarios, categorias, productos, pedidos y detalles.
-5. Confirmar la transaccion.
-6. Actualizar al menos 2 productos.
-7. Buscar un usuario por `id`.
-8. Buscar un usuario por `mail`.
-9. Borrar 1 producto.
-10. Cerrar `EntityManager` y `EntityManagerFactory`.
-
-## Test de integracion JPA
-
-El test `JpaIntegrationTest` valida el flujo end to end solicitado por la consigna:
-
-- Crea un `EntityManagerFactory` con la unidad de persistencia `miUnidad`.
-- Sobrescribe la URL JDBC con `jdbc:h2:mem:jpa_integration_test;DB_CLOSE_DELAY=-1`.
-- Crea una base H2 en memoria para el test.
-- No usa ni modifica la base de desarrollo `data/jpa_db.mv.db`.
-- Valida explicitamente que la URL de test empiece con `jdbc:h2:mem:` y que no contenga `./data/jpa_db`.
-- Limpia las tablas del dominio antes de persistir la semilla.
-- Persiste los datos de `DatosSemillaFactory`.
-- Valida que existan 2 usuarios, 3 categorias, 10 productos y 3 pedidos.
-- Valida que cada pedido tenga usuario y al menos 2 detalles.
-- Valida que cada detalle referencie un producto y tenga subtotal positivo.
-- Actualiza 2 productos.
-- Busca un usuario por `id`.
-- Busca un usuario por `mail`.
-- Borra 1 producto.
-- Cierra los recursos de JPA al finalizar.
-
-El test `PersistenciaInicialTest` valida especificamente que, si la base H2 local no existe, el inicializador crea una base nueva y persiste la semilla. Para no tocar la base de desarrollo, usa un directorio temporal de JUnit y una URL `jdbc:h2:file:` apuntando a ese temporal.
-
-## Conclusiones esperadas
-
-El test de integracion deja cubiertos los puntos finales de la consigna:
-
-- Persistir objetos en base de datos.
-- Comprender el ciclo de vida de una entidad mediante persistencia, busqueda, actualizacion y borrado.
-- Comprender operaciones CRUD sobre entidades JPA.
-
-## Dependencias esperadas
-
-Ademas de Lombok y JUnit, el proyecto debe incluir dependencias para:
-
-- Hibernate ORM.
-- Jakarta Persistence API.
-- H2 Database.
+Al iniciar la aplicacion se aplica la semilla solo cuando la base local no existe o no tiene registros. Para volver a cargar una base limpia desde cero, usar la opcion `Regenerar datos` del menu principal; esa accion borra los archivos locales de H2, recrea el esquema nuevo y vuelve a aplicar la semilla.
+La opcion `Revertir baja logica` muestra solo registros eliminados para evitar restauraciones accidentales.
+La baja logica de una categoria desactiva tambien sus productos activos asociados para evitar dejar referencias funcionales incongruentes; la consola muestra un reporte breve de esos productos.
 
 ## Ejecucion
 
-Requisitos:
-
-- Java instalado.
-- Gradle Wrapper incluido en el proyecto.
-- Dependencias configuradas en `build.gradle`.
-
-Ejecutar desde la raiz del repositorio:
-
-```bash
-./gradlew run
-```
-
-Mientras el programa esta corriendo, deja disponible la consola web local de H2:
-
-```text
-URL: http://localhost:8082
-JDBC URL: jdbc:h2:file:./data/jpa_db;AUTO_SERVER=TRUE
-Usuario: sa
-Password: dejar vacio
-```
-
-El programa debe quedar abierto para conectarse desde la consola. Si se cierra con la opcion `0`, tambien se cierra la consola web.
-
-Opciones del menu:
-
-```text
-1 - Mostrar estado
-2 - Borrar base local y reinstanciar semilla
-3 - Actualizar 2 productos
-4 - Buscar usuario por id
-5 - Buscar usuario por mail parcial
-6 - Borrar 1 producto
-7 - Listar productos con borrado logico
-8 - Revertir borrado logico de producto
-0 - Salir
-```
-
-La opcion `2` cierra JPA y la consola H2, borra los archivos locales `data/jpa_db.mv.db`, `data/jpa_db.trace.db` y `data/jpa_db.lock.db` si existen, vuelve a crear la base y persiste otra vez la semilla inicial: 2 usuarios, 3 pedidos con al menos 2 detalles por pedido, 3 categorias y 10 productos.
-
-La opcion `3` obliga a actualizar 2 productos distintos. Para cada producto:
-
-- Muestra la lista de productos disponibles.
-- Pide un id existente y no repetido.
-- Construye dinamicamente el menu de atributos editables.
-- Permite editar `nombre`, `precio`, `descripcion`, `stock`, `imagen`, `disponible` o `categoria`.
-- No tiene opcion por defecto: el usuario debe elegir explicitamente que atributo actualizar.
-- Muestra el valor actual o el detalle correspondiente antes de pedir el nuevo valor.
-- Valida estrictamente las entradas: textos no vacios, stock entero mayor o igual a 0, precio decimal mayor o igual a 0.01, disponible como `si/no`, `s/n` o `true/false` y categoria existente.
-
-La validacion de entradas esta centralizada en `EntradaValidada` para reutilizarla en las proximas opciones del menu.
-
-La opcion `4` busca un usuario por id. Valida que el id sea numerico y mayor a 0, y muestra el detalle del usuario si existe.
-
-La opcion `5` busca usuarios por coincidencia parcial de mail usando `like`. Permite ingresar fragmentos como `gmail`, `bruno` o `@gmail.com`; valida que el texto no este vacio ni tenga espacios y muestra todos los usuarios encontrados.
-
-La opcion `6` borra logicamente 1 producto. El producto no se elimina fisicamente de la base: se marca `eliminado = true`, desaparece de los listados activos y sigue existiendo en la tabla `Producto`.
-
-La opcion `7` lista solamente productos con borrado logico (`eliminado = true`).
-
-La opcion `8` revierte el borrado logico de un producto. Solo permite elegir ids de productos que ya esten marcados con `eliminado = true`; al restaurarlo vuelve a `eliminado = false` y reaparece en los listados activos.
-
-Compilar y ejecutar tests:
+Compilar:
 
 ```bash
 ./gradlew build
 ```
 
-## Salida esperada
+Ejecutar la aplicacion:
 
-Al ejecutar `./gradlew run`, el programa muestra:
-- Si la base H2 local existia al iniciar.
-- Si se persistieron los datos iniciales.
-- El total actual de usuarios, categorias y pedidos.
-- Productos activos y productos eliminados en lineas separadas.
-- Los datos de conexion para la consola web H2 local.
-- El menu con opcion explicita de salida.
+```bash
+./gradlew run
+```
+
+Clase principal:
+
+```text
+com.tp.jpa.Main
+```
+
+## Verificacion
+
+Suite completa:
+
+```bash
+./gradlew test
+```
+
+Lint basico de formato:
+
+```bash
+./gradlew lintJavaFormatting
+```
+
+Tests relevantes:
+
+```bash
+./gradlew test --tests com.tp.jpa.MainTest
+./gradlew test --tests com.tp.jpa.service.CatalogoServiceTest
+./gradlew test --tests com.tp.jpa.repository.CategoriaRepositoryTest
+./gradlew test --tests com.tp.jpa.repository.ProductoRepositoryTest
+./gradlew test --tests com.tp.jpa.integration.JpaIntegrationTest
+```
+
+## Correspondencia con Historias
+
+| Historia | Estado | Implementacion |
+|----------|--------|----------------|
+| HU-01 BaseRepository | Completa | `BaseRepository<T>` con `guardar`, `buscarPorId`, `listarActivos`, `eliminarLogico`, transacciones y cierre de `EntityManager`. |
+| HU-02 Repositorios especificos | Completa | `CategoriaRepository` y `ProductoRepository`, incluyendo `buscarPorCategoria`. |
+| HU-03 Alta categoria | Completa | Menu de categorias, validacion de nombre/descripcion, ID visible. |
+| HU-04 Modificar categoria | Completa | Lista activas, valida ID, muestra valores actuales, campos vacios conservan valor. |
+| HU-05 Baja categoria | Completa | Baja logica, valida inexistente o ya eliminada, no aparece en listados activos. |
+| HU-06 Alta producto | Completa | Lista categorias activas, valida precio/stock, relacion `ManyToOne`, ID visible. |
+| HU-07 Modificar producto | Completa | Lista activos, valida ID, muestra valores actuales, valida precio/stock. |
+| HU-08 Baja producto | Completa | Baja logica, confirma con nombre, no aparece en listados activos. |
+| HU-09 Consulta JPQL | Completa | Reporte por categoria con JPQL tipado y parametro `:categoriaId`. |
+
+## Guia para Video de Demostracion
+
+Duracion sugerida: 10 a 15 minutos. Mantener camara encendida y audio claro.
+
+### 1. Presentacion
+
+Duracion sugerida: 1 minuto.
+
+Contenido:
+
+1. Nombre y materia.
+2. Indicar que se trata del Parcial 2 de JPA.
+3. Mostrar brevemente el objetivo: ABM de categorias/productos, repositorios y consulta JPQL.
+
+### 2. Recorrido por la Estructura
+
+Duracion sugerida: 2 minutos.
+
+Mostrar:
+
+1. `com.tp.jpa.Main` como unica entrada.
+2. `model` y `model.enums`.
+3. `repository` con `BaseRepository`, `CategoriaRepository`, `ProductoRepository`.
+4. `service/CatalogoService`.
+5. `persistence.xml`.
+6. `docs/diagrama.puml`, aclarando que las relaciones del UML se respetan.
+
+### 3. Repositorios y JPQL
+
+Duracion sugerida: 2 minutos.
+
+Explicar:
+
+1. `BaseRepository.guardar` usa `merge()` y transacciones.
+2. `buscarPorId` retorna `Optional`.
+3. `listarActivos` filtra `eliminado = false`.
+4. `eliminarLogico` marca `eliminado = true`.
+5. `ProductoRepository.buscarPorCategoria` usa JPQL con `TypedQuery<Producto>`.
+
+### 4. Demo de Regeneracion de Datos
+
+Duracion sugerida: 1 minuto.
+
+En la consola:
+
+1. Entrar a `Regenerar datos`.
+2. Confirmar la operacion con `s`.
+3. Mostrar el resumen de registros cargados.
+4. Aclarar que la base local no se versiona y que la regeneracion aplica nuevamente la semilla sobre un esquema limpio.
+
+### 5. Demo de Reversion de Baja
+
+Duracion sugerida: 1 minuto.
+
+En la consola:
+
+1. Entrar a `Categorias` o `Productos`.
+2. Elegir `Revertir baja logica`.
+3. Mostrar que solo aparecen elementos eliminados.
+4. Restaurar uno.
+5. Confirmar que vuelve a figurar en los listados activos.
+
+### 6. Demo de Categorias
+
+Duracion sugerida: 2 minutos.
+
+En la consola:
+
+1. Entrar a `Categorias`.
+2. Crear una categoria.
+3. Mostrar el ID generado.
+4. Listar categorias activas.
+5. Modificar nombre o descripcion.
+6. Dar de baja una categoria.
+7. Confirmar que no aparece en el listado activo.
+
+### 7. Demo de Productos
+
+Duracion sugerida: 3 minutos.
+
+En la consola:
+
+1. Entrar a `Productos`.
+2. Crear un producto seleccionando una categoria activa.
+3. Probar validacion de precio `0` o stock negativo.
+4. Confirmar alta con ID generado y categoria asignada.
+5. Listar productos activos.
+6. Modificar nombre, precio o stock.
+7. Dar de baja un producto.
+8. Confirmar que no aparece en productos activos.
+
+### 8. Demo de Reporte por Categoria
+
+Duracion sugerida: 2 minutos.
+
+En la consola:
+
+1. Entrar a `Reportes`.
+2. Elegir `Productos por categoria`.
+3. Seleccionar una categoria activa.
+4. Mostrar productos con ID, nombre, precio y stock.
+5. Luego de bajar un producto, repetir el reporte y confirmar que ya no aparece.
+
+### 9. Tests y Cierre
+
+Duracion sugerida: 2 minutos.
+
+Mostrar:
+
+```bash
+./gradlew test
+./gradlew lintJavaFormatting
+```
+
+Cerrar explicando:
+
+1. Funcionalidades implementadas.
+2. Separacion en repositorio, servicio y consola.
+3. Validaciones en consola, servicio y entidades.
+4. IDs autogenerados.
+5. Dificultades resueltas: unificacion de paquetes, preservacion del UML, listados activos y manejo de base H2 local.
