@@ -91,10 +91,15 @@ class MainTest {
 
         @Override
         public boolean eliminarLogico(Long id) {
+            return cambiarEstadoEliminado(id, true) != null;
+        }
+
+        @Override
+        public Categoria cambiarEstadoEliminado(Long id, boolean eliminado) {
             Categoria c = store.get(id);
-            if (c == null || Boolean.TRUE.equals(c.getEliminado())) return false;
-            c.setEliminado(true);
-            return true;
+            if (c == null) return null;
+            c.setEliminado(eliminado);
+            return c;
         }
 
         @Override
@@ -147,10 +152,15 @@ class MainTest {
 
         @Override
         public boolean eliminarLogico(Long id) {
+            return cambiarEstadoEliminado(id, true) != null;
+        }
+
+        @Override
+        public Producto cambiarEstadoEliminado(Long id, boolean eliminado) {
             Producto p = store.get(id);
-            if (p == null || Boolean.TRUE.equals(p.getEliminado())) return false;
-            p.setEliminado(true);
-            return true;
+            if (p == null) return null;
+            p.setEliminado(eliminado);
+            return p;
         }
 
         @Override

@@ -67,19 +67,19 @@ public abstract class BaseRepository<T> {
         }
     }
 
-    public boolean eliminarLogico(Long id) {
+    public T cambiarEstadoEliminado(Long id, boolean eliminado) {
         EntityManager entityManager = crearEntityManager();
         try {
             entityManager.getTransaction().begin();
             T entity = entityManager.find(entityClass, id);
             if (entity == null) {
                 entityManager.getTransaction().commit();
-                return false;
+                return null;
             }
-            marcarEliminado(entity);
-            entityManager.merge(entity);
+            marcarEliminado(entity, eliminado);
+            T merged = entityManager.merge(entity);
             entityManager.getTransaction().commit();
-            return true;
+            return merged;
         } catch (RuntimeException exception) {
             if (entityManager.getTransaction().isActive()) {
                 entityManager.getTransaction().rollback();
@@ -88,6 +88,10 @@ public abstract class BaseRepository<T> {
         } finally {
             entityManager.close();
         }
+    }
+
+    public boolean eliminarLogico(Long id) {
+        return cambiarEstadoEliminado(id, true) != null;
     }
 
     public long siguienteId() {
@@ -104,11 +108,11 @@ public abstract class BaseRepository<T> {
         }
     }
 
-    private void marcarEliminado(T entity) {
+    private void marcarEliminado(T entity, boolean eliminado) {
         if (!(entity instanceof Base base)) {
             throw new IllegalArgumentException("La entidad no hereda de Base: " + entityClass.getName());
         }
-        base.setEliminado(true);
+        base.setEliminado(eliminado);
     }
 
     private EntityManager crearEntityManager() {

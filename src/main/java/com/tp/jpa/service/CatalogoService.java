@@ -63,9 +63,7 @@ public class CatalogoService {
         if (Boolean.TRUE.equals(categoria.getEliminado())) {
             throw new IllegalStateException("Error: la categoria ya se encuentra dada de baja.");
         }
-        categoriaRepository.eliminarLogico(id);
-        categoria.setEliminado(true);
-        return categoria;
+        return categoriaRepository.cambiarEstadoEliminado(id, true);
     }
 
     public Categoria restaurarCategoria(Long id) {
@@ -74,8 +72,7 @@ public class CatalogoService {
         if (!Boolean.TRUE.equals(categoria.getEliminado())) {
             throw new IllegalStateException("Error: la categoria ya se encuentra activa.");
         }
-        categoria.setEliminado(false);
-        return categoriaRepository.guardar(categoria);
+        return categoriaRepository.cambiarEstadoEliminado(id, false);
     }
 
     public Categoria obtenerCategoriaActiva(Long id) {
@@ -145,9 +142,7 @@ public class CatalogoService {
         if (Boolean.TRUE.equals(producto.getEliminado())) {
             throw new IllegalStateException("Error: el producto ya se encuentra dado de baja.");
         }
-        productoRepository.eliminarLogico(id);
-        producto.setEliminado(true);
-        return producto;
+        return productoRepository.cambiarEstadoEliminado(id, true);
     }
 
     public Producto restaurarProducto(Long id) {
@@ -156,8 +151,7 @@ public class CatalogoService {
         if (!Boolean.TRUE.equals(producto.getEliminado())) {
             throw new IllegalStateException("Error: el producto ya se encuentra activo.");
         }
-        producto.setEliminado(false);
-        return productoRepository.guardar(producto);
+        return productoRepository.cambiarEstadoEliminado(id, false);
     }
 
     public Producto obtenerProductoActivo(Long id) {

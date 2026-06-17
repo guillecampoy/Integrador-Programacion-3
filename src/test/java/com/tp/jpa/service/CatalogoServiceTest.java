@@ -230,12 +230,17 @@ class CatalogoServiceTest {
 
         @Override
         public boolean eliminarLogico(Long id) {
+            return cambiarEstadoEliminado(id, true) != null;
+        }
+
+        @Override
+        public Categoria cambiarEstadoEliminado(Long id, boolean eliminado) {
             Categoria categoria = store.get(id);
-            if (categoria == null || Boolean.TRUE.equals(categoria.getEliminado())) {
-                return false;
+            if (categoria == null) {
+                return null;
             }
-            categoria.setEliminado(true);
-            return true;
+            categoria.setEliminado(eliminado);
+            return categoria;
         }
     }
 
@@ -275,12 +280,17 @@ class CatalogoServiceTest {
 
         @Override
         public boolean eliminarLogico(Long id) {
+            return cambiarEstadoEliminado(id, true) != null;
+        }
+
+        @Override
+        public Producto cambiarEstadoEliminado(Long id, boolean eliminado) {
             Producto producto = store.get(id);
-            if (producto == null || Boolean.TRUE.equals(producto.getEliminado())) {
-                return false;
+            if (producto == null) {
+                return null;
             }
-            producto.setEliminado(true);
-            return true;
+            producto.setEliminado(eliminado);
+            return producto;
         }
 
         @Override
