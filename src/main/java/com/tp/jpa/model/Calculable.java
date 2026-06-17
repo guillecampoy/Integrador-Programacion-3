@@ -1,5 +1,5 @@
 package com.tp.jpa.model;
 
 public interface Calculable {
-    public void calcularTotal();
+  public void calcularTotal();
 }

@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'application'
+    id 'com.diffplug.spotless' version '7.0.4'
 }
 
 group = 'org.example'
@@ -12,6 +13,22 @@ repositories {
 
 application {
     mainClass = 'com.tp.jpa.Main'
+}
+
+spotless {
+    java {
+        googleJavaFormat()
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+
+    format 'misc', {
+        target 'build.gradle', 'README.md', 'src/**/*.xml'
+
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
 }
 
 run {
@@ -44,51 +61,10 @@ test {
     }
 }
 
-tasks.register('lintJavaFormatting') {
-    group = 'verification'
-    description = 'Checks basic source formatting: tabs, trailing whitespace, final newline and 4-space indentation.'
+check.dependsOn tasks.named('spotlessCheck')
 
-    doLast {
-        def filesToCheck = fileTree(projectDir) {
-            include 'build.gradle'
-            include 'README.md'
-            include 'src/**/*.java'
-            include 'src/**/*.xml'
-            exclude 'build/**'
-            exclude 'data/**'
-            exclude '.gradle/**'
-        }
-
-        def violations = []
-        filesToCheck.files.sort().each { sourceFile ->
-            def text = sourceFile.getText('UTF-8')
-            def relativePath = projectDir.toPath().relativize(sourceFile.toPath()).toString()
-
-            if (!text.endsWith('\n')) {
-                violations << "${relativePath}: missing final newline"
-            }
-
-            text.readLines().eachWithIndex { line, index ->
-                def lineNumber = index + 1
-                if (line.contains('\t')) {
-                    violations << "${relativePath}:${lineNumber}: tab character found"
-                }
-                if (line ==~ /.*\s+$/) {
-                    violations << "${relativePath}:${lineNumber}: trailing whitespace"
-                }
-                if (relativePath.endsWith('.java') && line.trim()) {
-                    def leadingSpaces = line.takeWhile { it == ' ' }.length()
-                    if (leadingSpaces % 4 != 0) {
-                        violations << "${relativePath}:${lineNumber}: indentation is not a multiple of 4 spaces"
-                    }
-                }
-            }
-        }
-
-        if (!violations.isEmpty()) {
-            throw new GradleException("Formatting lint failed:\n" + violations.join('\n'))
-        }
-    }
+tasks.register('format') {
+    group = 'formatting'
+    description = 'Formats source files using Spotless.'
+    dependsOn tasks.named('spotlessApply')
 }
-
-check.dependsOn tasks.named('lintJavaFormatting')
