@@ -90,11 +90,6 @@ class MainTest {
         }
 
         @Override
-        public boolean eliminarLogico(Long id) {
-            return cambiarEstadoEliminado(id, true) != null;
-        }
-
-        @Override
         public Categoria cambiarEstadoEliminado(Long id, boolean eliminado) {
             Categoria c = store.get(id);
             if (c == null) return null;
@@ -148,11 +143,6 @@ class MainTest {
             return store.values().stream()
                     .filter(p -> Boolean.TRUE.equals(p.getEliminado()))
                     .collect(Collectors.toList());
-        }
-
-        @Override
-        public boolean eliminarLogico(Long id) {
-            return cambiarEstadoEliminado(id, true) != null;
         }
 
         @Override

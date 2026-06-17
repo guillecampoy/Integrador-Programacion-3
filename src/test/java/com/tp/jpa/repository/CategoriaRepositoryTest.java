@@ -81,7 +81,7 @@ class CategoriaRepositoryTest {
     void testListarActivosExcludesDeleted() {
         Categoria c = crearCategoria("ParaBorrar");
         Categoria guardada = repository.guardar(c);
-        repository.eliminarLogico(guardada.getId());
+        repository.cambiarEstadoEliminado(guardada.getId(), true);
         List<Categoria> activas = repository.listarActivos();
         assertTrue(activas.stream().noneMatch(cat -> cat.getId().equals(guardada.getId())));
     }
@@ -90,14 +90,14 @@ class CategoriaRepositoryTest {
     void testEliminarLogico() {
         Categoria c = crearCategoria("ParaBorrar");
         Categoria guardada = repository.guardar(c);
-        assertTrue(repository.eliminarLogico(guardada.getId()));
+        assertTrue(repository.cambiarEstadoEliminado(guardada.getId(), true).getEliminado());
         Categoria recuperada = repository.buscarPorId(guardada.getId()).orElseThrow();
         assertTrue(recuperada.getEliminado());
     }
 
     @Test
     void testEliminarLogicoNotFound() {
-        assertFalse(repository.eliminarLogico(-1L));
+        assertNull(repository.cambiarEstadoEliminado(-1L, true));
     }
 
     @Test

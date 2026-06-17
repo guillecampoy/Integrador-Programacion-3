@@ -67,6 +67,16 @@ public abstract class BaseRepository<T> {
         }
     }
 
+    /**
+     * Se utiliza un único método para hacer el borrado lógico y revertir el mismo
+     * Como no se cuenta con lógica especifica para las especializaciones concretas
+     * En Categoría y Producto, se deja en esta clase.
+     *
+     * @param id se corresponde con el ID de la entidad que se desea modificar estado
+     * @param eliminado modificador que indica si se borra o restaura
+     * @return 
+     */
+
     public T cambiarEstadoEliminado(Long id, boolean eliminado) {
         EntityManager entityManager = crearEntityManager();
         try {
@@ -88,10 +98,6 @@ public abstract class BaseRepository<T> {
         } finally {
             entityManager.close();
         }
-    }
-
-    public boolean eliminarLogico(Long id) {
-        return cambiarEstadoEliminado(id, true) != null;
     }
 
     public long siguienteId() {

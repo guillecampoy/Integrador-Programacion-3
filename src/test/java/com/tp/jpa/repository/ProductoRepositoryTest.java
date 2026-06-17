@@ -99,7 +99,7 @@ class ProductoRepositoryTest {
     void testListarActivosExcludesDeleted() {
         Categoria cat = guardarCategoria("Bebidas");
         Producto p = guardarProducto("ParaBorrar", 100.0, 5, cat);
-        productoRepository.eliminarLogico(p.getId());
+        productoRepository.cambiarEstadoEliminado(p.getId(), true);
         List<Producto> activos = productoRepository.listarActivos();
         assertTrue(activos.stream().noneMatch(prod -> prod.getId().equals(p.getId())));
     }
@@ -108,14 +108,14 @@ class ProductoRepositoryTest {
     void testEliminarLogico() {
         Categoria cat = guardarCategoria("Bebidas");
         Producto p = guardarProducto("ParaBorrar", 100.0, 5, cat);
-        assertTrue(productoRepository.eliminarLogico(p.getId()));
+        assertTrue(productoRepository.cambiarEstadoEliminado(p.getId(), true).getEliminado());
         Producto recuperado = productoRepository.buscarPorId(p.getId()).orElseThrow();
         assertTrue(recuperado.getEliminado());
     }
 
     @Test
     void testEliminarLogicoNotFound() {
-        assertFalse(productoRepository.eliminarLogico(-1L));
+        assertNull(productoRepository.cambiarEstadoEliminado(-1L, true));
     }
 
     @Test
@@ -149,7 +149,7 @@ class ProductoRepositoryTest {
     void testBuscarPorCategoriaExcludesDeleted() {
         Categoria cat = guardarCategoria("Bebidas");
         Producto p = guardarProducto("Cafe", 1500.0, 20, cat);
-        productoRepository.eliminarLogico(p.getId());
+        productoRepository.cambiarEstadoEliminado(p.getId(), true);
         List<Producto> resultados = productoRepository.buscarPorCategoria(cat.getId());
         assertTrue(resultados.isEmpty());
     }

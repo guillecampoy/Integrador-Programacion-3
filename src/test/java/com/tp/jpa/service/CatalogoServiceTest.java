@@ -229,11 +229,6 @@ class CatalogoServiceTest {
         }
 
         @Override
-        public boolean eliminarLogico(Long id) {
-            return cambiarEstadoEliminado(id, true) != null;
-        }
-
-        @Override
         public Categoria cambiarEstadoEliminado(Long id, boolean eliminado) {
             Categoria categoria = store.get(id);
             if (categoria == null) {
@@ -276,11 +271,6 @@ class CatalogoServiceTest {
             return store.values().stream()
                     .filter(producto -> !Boolean.TRUE.equals(producto.getEliminado()))
                     .toList();
-        }
-
-        @Override
-        public boolean eliminarLogico(Long id) {
-            return cambiarEstadoEliminado(id, true) != null;
         }
 
         @Override
