@@ -6,7 +6,11 @@ import ar.edu.tup.programacion3.entities.Producto;
 import ar.edu.tup.programacion3.entities.Usuario;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.NonUniqueResultException;
 import jakarta.persistence.Persistence;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.RollbackException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -251,6 +255,18 @@ public class PersistenciaInicial implements AutoCloseable {
             T resultado = function.apply(entityManager);
             entityManager.getTransaction().commit();
             return resultado;
+        } catch (NoResultException exception) {
+            rollbackSiActivo(entityManager);
+            throw errorConsultaSinResultados(exception);
+        } catch (NonUniqueResultException exception) {
+            rollbackSiActivo(entityManager);
+            throw errorConsultaConResultadosDuplicados(exception);
+        } catch (RollbackException exception) {
+            rollbackSiActivo(entityManager);
+            throw errorRollback(exception);
+        } catch (PersistenceException exception) {
+            rollbackSiActivo(entityManager);
+            throw errorPersistencia(exception);
         } catch (RuntimeException exception) {
             if (entityManager.getTransaction().isActive()) {
                 entityManager.getTransaction().rollback();
@@ -265,6 +281,12 @@ public class PersistenciaInicial implements AutoCloseable {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         try {
             return function.apply(entityManager);
+        } catch (NoResultException exception) {
+            throw errorConsultaSinResultados(exception);
+        } catch (NonUniqueResultException exception) {
+            throw errorConsultaConResultadosDuplicados(exception);
+        } catch (PersistenceException exception) {
+            throw errorPersistencia(exception);
         } finally {
             entityManager.close();
         }
@@ -281,6 +303,28 @@ public class PersistenciaInicial implements AutoCloseable {
         } catch (IOException exception) {
             throw new IllegalStateException("No se pudo borrar " + path, exception);
         }
+    }
+
+    private void rollbackSiActivo(EntityManager entityManager) {
+        if (entityManager.getTransaction().isActive()) {
+            entityManager.getTransaction().rollback();
+        }
+    }
+
+    private IllegalStateException errorConsultaSinResultados(NoResultException exception) {
+        return new IllegalStateException("La consulta JPA no devolvio resultados.", exception);
+    }
+
+    private IllegalStateException errorConsultaConResultadosDuplicados(NonUniqueResultException exception) {
+        return new IllegalStateException("La consulta JPA devolvio mas de un resultado.", exception);
+    }
+
+    private IllegalStateException errorRollback(RollbackException exception) {
+        return new IllegalStateException("No se pudo confirmar la transaccion JPA.", exception);
+    }
+
+    private IllegalStateException errorPersistencia(PersistenceException exception) {
+        return new IllegalStateException("Ocurrio un error de persistencia JPA.", exception);
     }
 
     public record ResumenPersistencia(
