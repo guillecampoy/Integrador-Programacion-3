@@ -12,8 +12,7 @@ public class ProductoRepository extends BaseRepository<Producto> {
   }
 
   public List<Producto> buscarPorCategoria(Long categoriaId) {
-    EntityManager entityManager = JPAUtil.getEntityManagerFactory().createEntityManager();
-    try {
+    try (EntityManager entityManager = JPAUtil.getEntityManagerFactory().createEntityManager()) {
       // Consulta JPQL que obtiene los productos activos asociados a la categoria indicada por su
       // ID.
       TypedQuery<Producto> query =
@@ -22,8 +21,6 @@ public class ProductoRepository extends BaseRepository<Producto> {
               Producto.class);
       query.setParameter("categoriaId", categoriaId);
       return query.getResultList();
-    } finally {
-      entityManager.close();
     }
   }
 }

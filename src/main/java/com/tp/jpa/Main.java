@@ -4,6 +4,7 @@ import static com.tp.jpa.util.ConsolaUtils.SEPARADOR;
 import static com.tp.jpa.util.ConsolaUtils.imprimirError;
 import static com.tp.jpa.util.ConsolaUtils.imprimirMensaje;
 import static com.tp.jpa.util.ConsolaUtils.imprimirOpcion;
+import static com.tp.jpa.util.ConsolaUtils.imprimirTabla;
 import static com.tp.jpa.util.ConsolaUtils.imprimirTitulo;
 import static com.tp.jpa.util.ConsolaUtils.prompt;
 
@@ -170,7 +171,7 @@ public class Main {
       imprimirMensaje("No hay categorias activas para mostrar.");
       return;
     }
-    categorias.forEach(this::imprimirCategoria);
+    imprimirCategorias(categorias);
   }
 
   private void listarProductosActivos() {
@@ -180,7 +181,7 @@ public class Main {
       imprimirMensaje("No hay productos activos para mostrar.");
       return;
     }
-    productos.forEach(this::imprimirProducto);
+    imprimirProductos(productos);
   }
 
   private void restaurarCategoria() {
@@ -191,7 +192,7 @@ public class Main {
       return;
     }
 
-    categorias.forEach(this::imprimirCategoria);
+    imprimirCategorias(categorias);
     Set<Long> idsValidos =
         categorias.stream().map(Categoria::getId).collect(java.util.stream.Collectors.toSet());
     long id =
@@ -216,7 +217,7 @@ public class Main {
       return;
     }
 
-    productos.forEach(this::imprimirProducto);
+    imprimirProductos(productos);
     Set<Long> idsValidos =
         productos.stream().map(Producto::getId).collect(java.util.stream.Collectors.toSet());
     long id =
@@ -241,7 +242,7 @@ public class Main {
       return;
     }
 
-    categorias.forEach(this::imprimirCategoria);
+    imprimirCategorias(categorias);
     Set<Long> idsValidos =
         categorias.stream().map(Categoria::getId).collect(java.util.stream.Collectors.toSet());
     long categoriaId =
@@ -265,7 +266,7 @@ public class Main {
     }
 
     System.out.println("Productos activos de la categoria " + categoria.getNombre() + ":");
-    productos.forEach(this::imprimirProductoReporte);
+    imprimirProductosReporte(productos);
   }
 
   private void modificarProducto() {
@@ -276,7 +277,7 @@ public class Main {
       return;
     }
 
-    productos.forEach(this::imprimirProducto);
+    imprimirProductos(productos);
     Set<Long> idsValidos =
         productos.stream().map(Producto::getId).collect(java.util.stream.Collectors.toSet());
     long id =
@@ -293,18 +294,36 @@ public class Main {
       return;
     }
 
-    System.out.println("Valores actuales:");
-    System.out.println("Nombre actual: " + producto.getNombre());
-    System.out.println("Descripcion actual: " + producto.getDescripcion());
-    System.out.println("Precio actual: " + producto.getPrecio());
-    System.out.println("Stock actual: " + producto.getStock());
+    imprimirValoresActuales(
+        new String[][] {
+          {"Nombre", producto.getNombre()},
+          {"Descripcion", producto.getDescripcion()},
+          {"Precio", producto.getPrecio().toString()},
+          {"Stock", String.valueOf(producto.getStock())},
+          {"Categoria", producto.getCategoria() == null ? "" : producto.getCategoria().getNombre()}
+        });
+
+    List<Categoria> categoriasActivas = catalogoService.listarCategoriasActivas();
+    if (categoriasActivas.isEmpty()) {
+      imprimirMensaje(
+          "No hay categorias activas disponibles para reasignar. Deje el campo vacio para conservar la categoria actual.");
+    } else {
+      imprimirMensaje("Categorias activas disponibles para reasignar:");
+      imprimirCategorias(categoriasActivas);
+    }
+    Set<Long> idsCategoriasActivas =
+        categoriasActivas.stream()
+            .map(Categoria::getId)
+            .collect(java.util.stream.Collectors.toSet());
 
     String nombre = leerLinea(prompt("Nuevo nombre (enter para conservar)"));
     String precioTexto = leerLinea(prompt("Nuevo precio (enter para conservar)"));
     String stockTexto = leerLinea(prompt("Nuevo stock (enter para conservar)"));
+    String categoriaTexto = leerLinea(prompt("Nueva categoria (enter para conservar)"));
 
     Double nuevoPrecio = null;
     Integer nuevoStock = null;
+    Long nuevaCategoriaId = null;
     if (!precioTexto.isBlank()) {
       try {
         nuevoPrecio = Double.parseDouble(precioTexto.trim());
@@ -329,9 +348,25 @@ public class Main {
         return;
       }
     }
+    if (!categoriaTexto.isBlank()) {
+      try {
+        nuevaCategoriaId = Long.parseLong(categoriaTexto.trim());
+      } catch (NumberFormatException exception) {
+        imprimirError("Error: ingrese un ID numerico mayor a 0 para la categoria.");
+        return;
+      }
+      if (nuevaCategoriaId <= 0) {
+        imprimirError("Error: ingrese un ID numerico mayor a 0 para la categoria.");
+        return;
+      }
+      if (!idsCategoriasActivas.contains(nuevaCategoriaId)) {
+        imprimirError("Error: no existe una categoria activa con el ID indicado.");
+        return;
+      }
+    }
 
     try {
-      catalogoService.modificarProducto(id, nombre, nuevoPrecio, nuevoStock);
+      catalogoService.modificarProducto(id, nombre, nuevoPrecio, nuevoStock, nuevaCategoriaId);
       imprimirMensaje("Producto modificado correctamente.");
     } catch (RuntimeException exception) {
       imprimirError("No se modifico el producto: " + exception.getMessage());
@@ -383,7 +418,7 @@ public class Main {
       return;
     }
 
-    categorias.forEach(this::imprimirCategoria);
+    imprimirCategorias(categorias);
     Set<Long> idsValidos =
         categorias.stream().map(Categoria::getId).collect(java.util.stream.Collectors.toSet());
     long id =
@@ -400,9 +435,11 @@ public class Main {
       return;
     }
 
-    System.out.println("Valores actuales:");
-    System.out.println("Nombre actual: " + categoria.getNombre());
-    System.out.println("Descripcion actual: " + categoria.getDescripcion());
+    imprimirValoresActuales(
+        new String[][] {
+          {"Nombre", categoria.getNombre()},
+          {"Descripcion", categoria.getDescripcion()}
+        });
 
     String nombre = leerLinea(prompt("Nuevo nombre (enter para conservar)"));
     String descripcion = leerLinea(prompt("Nueva descripcion (enter para conservar)"));
@@ -441,7 +478,7 @@ public class Main {
       return;
     }
 
-    categorias.forEach(this::imprimirCategoria);
+    imprimirCategorias(categorias);
     Set<Long> idsValidos =
         categorias.stream().map(Categoria::getId).collect(java.util.stream.Collectors.toSet());
     long categoriaId =
@@ -488,45 +525,50 @@ public class Main {
     return scanner.nextLine();
   }
 
-  private void imprimirCategoria(Categoria categoria) {
-    System.out.println(
-        "ID: "
-            + categoria.getId()
-            + " | Nombre: "
-            + categoria.getNombre()
-            + " | Descripcion: "
-            + categoria.getDescripcion());
+  private void imprimirCategorias(List<Categoria> categorias) {
+    imprimirTabla(
+        new String[] {"ID", "Nombre", "Descripcion"},
+        categorias.stream()
+            .map(c -> new String[] {c.getId().toString(), c.getNombre(), c.getDescripcion()})
+            .toList());
   }
 
-  private void imprimirProducto(Producto producto) {
-    String categoria = producto.getCategoria() == null ? "" : producto.getCategoria().getNombre();
-    System.out.println(
-        "ID: "
-            + producto.getId()
-            + " | Nombre: "
-            + producto.getNombre()
-            + " | Descripcion: "
-            + producto.getDescripcion()
-            + " | Precio: "
-            + producto.getPrecio()
-            + " | Stock: "
-            + producto.getStock()
-            + " | Categoria: "
-            + categoria);
+  private void imprimirProductos(List<Producto> productos) {
+    imprimirTabla(
+        new String[] {"ID", "Nombre", "Descripcion", "Precio", "Stock", "Categoria"},
+        productos.stream()
+            .map(
+                p ->
+                    new String[] {
+                      p.getId().toString(),
+                      p.getNombre(),
+                      p.getDescripcion(),
+                      p.getPrecio().toString(),
+                      String.valueOf(p.getStock()),
+                      p.getCategoria() == null ? "" : p.getCategoria().getNombre()
+                    })
+            .toList());
   }
 
-  private void imprimirProductoReporte(Producto producto) {
-    System.out.println(
-        "ID: "
-            + producto.getId()
-            + " | Nombre: "
-            + producto.getNombre()
-            + " | Descripcion: "
-            + producto.getDescripcion()
-            + " | Precio: "
-            + producto.getPrecio()
-            + " | Stock: "
-            + producto.getStock());
+  private void imprimirProductosReporte(List<Producto> productos) {
+    imprimirTabla(
+        new String[] {"ID", "Nombre", "Descripcion", "Precio", "Stock"},
+        productos.stream()
+            .map(
+                p ->
+                    new String[] {
+                      p.getId().toString(),
+                      p.getNombre(),
+                      p.getDescripcion(),
+                      p.getPrecio().toString(),
+                      String.valueOf(p.getStock())
+                    })
+            .toList());
+  }
+
+  private void imprimirValoresActuales(String[][] filas) {
+    System.out.println("Valores actuales:");
+    imprimirTabla(new String[] {"Campo", "Valor"}, List.of(filas));
   }
 
   private void imprimirReporteBajaCategoria(List<Producto> productosDadosDeBaja) {
@@ -537,7 +579,7 @@ public class Main {
 
     System.out.println(
         "Productos dados de baja por cascada (" + productosDadosDeBaja.size() + "):");
-    productosDadosDeBaja.forEach(this::imprimirProducto);
+    imprimirProductos(productosDadosDeBaja);
   }
 
   private void mostrarMenuPrincipal() {

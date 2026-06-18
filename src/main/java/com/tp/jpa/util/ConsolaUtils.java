@@ -1,5 +1,7 @@
 package com.tp.jpa.util;
 
+import java.util.List;
+
 public final class ConsolaUtils {
   public static final String SEPARADOR =
       "------------------------------------------------------------";
@@ -30,6 +32,26 @@ public final class ConsolaUtils {
     System.out.printf("  %-35s %s%n", etiqueta + ":", valor);
   }
 
+  public static void imprimirTabla(String[] encabezados, List<String[]> filas) {
+    int[] anchos = new int[encabezados.length];
+    for (int i = 0; i < encabezados.length; i++) {
+      anchos[i] = encabezados[i].length();
+    }
+    for (String[] fila : filas) {
+      for (int i = 0; i < encabezados.length; i++) {
+        anchos[i] = Math.max(anchos[i], texto(fila[i]).length());
+      }
+    }
+
+    imprimirLineaTabla(anchos);
+    imprimirFilaTabla(encabezados, anchos);
+    imprimirLineaTabla(anchos);
+    for (String[] fila : filas) {
+      imprimirFilaTabla(fila, anchos);
+    }
+    imprimirLineaTabla(anchos);
+  }
+
   public static void imprimirMensaje(String mensaje) {
     System.out.println(PREFIJO_MENSAJE + mensaje);
   }
@@ -40,5 +62,25 @@ public final class ConsolaUtils {
 
   public static String prompt(String etiqueta) {
     return PREFIJO_MENSAJE + etiqueta + ": ";
+  }
+
+  private static void imprimirLineaTabla(int[] anchos) {
+    System.out.print("  +");
+    for (int ancho : anchos) {
+      System.out.print("-".repeat(ancho + 2) + "+");
+    }
+    System.out.println();
+  }
+
+  private static void imprimirFilaTabla(String[] valores, int[] anchos) {
+    System.out.print("  |");
+    for (int i = 0; i < anchos.length; i++) {
+      System.out.printf(" %-" + anchos[i] + "s |", texto(valores[i]));
+    }
+    System.out.println();
+  }
+
+  private static String texto(Object valor) {
+    return valor == null ? "" : valor.toString();
   }
 }
