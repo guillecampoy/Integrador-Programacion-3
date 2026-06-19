@@ -316,6 +316,21 @@ class MainTest {
   }
 
   @Test
+  void testModificarCategoriaIdInvalidoLuegoValido() {
+    FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
+    FakeProductoRepository prodRepo = new FakeProductoRepository();
+    Categoria existing = crearCategoria(1, "Original");
+    catRepo.add(existing);
+    Scanner scanner = new Scanner("1\n2\n99\n1\nNuevo\nNueva desc\n0\n0\n");
+    Main main = new Main(scanner, catRepo, prodRepo);
+    ejecutar(main);
+    String output = outContent.toString();
+    assertTrue(output.contains("no existe una categoria activa con el ID indicado"));
+    assertTrue(output.contains("Categoria modificada correctamente"));
+    assertEquals("Nuevo", catRepo.buscarPorId(1L).map(Categoria::getNombre).orElse(""));
+  }
+
+  @Test
   void testModificarCategoriaEmptyFieldPreserves() {
     FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
     FakeProductoRepository prodRepo = new FakeProductoRepository();

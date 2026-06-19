@@ -125,6 +125,13 @@ HU-05 queda implementada en el alta de categorias:
 3. La descripcion es opcional y se guarda vacia si el operador no ingresa texto.
 4. La categoria se persiste con `eliminado = false` y se muestra el ID generado.
 
+HU-06 queda implementada en la modificacion de categorias:
+
+1. La consola lista categorias activas antes de pedir el ID.
+2. El operador ve los valores actuales antes de editar.
+3. Los campos en blanco conservan el valor previo.
+4. La categoria modificada se persiste en la base.
+
 ## Capa de servicio
 
 `CatalogoService` concentra la logica de negocio que usa la consola:

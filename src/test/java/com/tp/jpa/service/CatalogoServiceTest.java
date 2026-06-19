@@ -73,6 +73,34 @@ class CatalogoServiceTest {
   }
 
   @Test
+  void modificarCategoriaPermiteActualizarNombreYConservarDescripcionEnBlanco() {
+    FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+    categoriaRepository.add(crearCategoria(1L, "Bebidas", false));
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, new FakeProductoRepository());
+
+    Categoria modificada = service.modificarCategoria(1L, "  Bebidas frias  ", "   ");
+
+    assertEquals("Bebidas frias", modificada.getNombre());
+    assertEquals("Desc Bebidas", modificada.getDescripcion());
+    assertEquals(1, categoriaRepository.guardarLlamadas);
+  }
+
+  @Test
+  void modificarCategoriaRechazaCategoriaInactiva() {
+    FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+    categoriaRepository.add(crearCategoria(1L, "Bebidas", true));
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, new FakeProductoRepository());
+
+    IllegalArgumentException exception =
+        assertThrows(IllegalArgumentException.class, () -> service.modificarCategoria(1L, "A", ""));
+
+    assertEquals("Error: no existe una categoria activa con el ID indicado.", exception.getMessage());
+    assertEquals(0, categoriaRepository.guardarLlamadas);
+  }
+
+  @Test
   void crearProductoRechazaPrecioYStockInvalidosAntesDeGuardar() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     FakeProductoRepository productoRepository = new FakeProductoRepository();
