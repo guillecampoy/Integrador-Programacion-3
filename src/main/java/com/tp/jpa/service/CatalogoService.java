@@ -65,13 +65,8 @@ public class CatalogoService {
     if (Boolean.TRUE.equals(categoria.getEliminado())) {
       throw new IllegalStateException("Error: la categoria ya se encuentra dada de baja.");
     }
-    List<Producto> productosActivos = productoRepository.buscarPorCategoria(id);
-    List<Producto> productosDadosDeBaja =
-        productosActivos.stream()
-            .map(producto -> productoRepository.cambiarEstadoEliminado(producto.getId(), true))
-            .toList();
     Categoria categoriaBaja = categoriaRepository.cambiarEstadoEliminado(id, true);
-    return new BajaCategoriaResultado(categoriaBaja, productosDadosDeBaja);
+    return new BajaCategoriaResultado(categoriaBaja, List.of());
   }
 
   public Categoria restaurarCategoria(Long id) {

@@ -459,7 +459,6 @@ public class Main {
     try {
       CatalogoService.BajaCategoriaResultado resultado = catalogoService.bajaCategoria(id);
       imprimirMensaje("Categoria dada de baja correctamente: " + resultado.categoria().getNombre());
-      imprimirReporteBajaCategoria(resultado.productosDadosDeBaja());
     } catch (RuntimeException exception) {
       imprimirError(exception.getMessage());
     }
@@ -565,17 +564,6 @@ public class Main {
   private void imprimirValoresActuales(String[][] filas) {
     System.out.println("Valores actuales:");
     imprimirTabla(new String[] {"Campo", "Valor"}, List.of(filas));
-  }
-
-  private void imprimirReporteBajaCategoria(List<Producto> productosDadosDeBaja) {
-    if (productosDadosDeBaja.isEmpty()) {
-      imprimirMensaje("No habia productos activos asociados para dar de baja.");
-      return;
-    }
-
-    System.out.println(
-        "Productos dados de baja por cascada (" + productosDadosDeBaja.size() + "):");
-    imprimirProductos(productosDadosDeBaja);
   }
 
   private void mostrarMenuPrincipal() {

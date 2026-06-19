@@ -372,10 +372,9 @@ class MainTest {
     ejecutar(main);
     String output = outContent.toString();
     assertTrue(output.contains("Categoria dada de baja correctamente"));
-    assertTrue(output.contains("Productos dados de baja por cascada"));
-    assertTrue(output.contains("Cafe"));
+    assertFalse(output.contains("Productos dados de baja por cascada"));
     assertTrue(catRepo.buscarPorId(1L).map(Categoria::getEliminado).orElse(false));
-    assertTrue(prodRepo.buscarPorId(1L).map(Producto::getEliminado).orElse(false));
+    assertFalse(prodRepo.buscarPorId(1L).map(Producto::getEliminado).orElse(true));
     assertTrue(prodRepo.buscarPorId(2L).map(Producto::getEliminado).orElse(false));
   }
 

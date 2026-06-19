@@ -213,7 +213,7 @@ class CatalogoServiceTest {
   }
 
   @Test
-  void bajaCategoriaDesactivaProductosActivosAsociadosYReportaCualesSeAfectan() {
+  void bajaCategoriaSoloDesactivaLaCategoriaYConservaLosProductos() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     FakeProductoRepository productoRepository = new FakeProductoRepository();
     Categoria categoria = crearCategoria(1L, "Bebidas", false);
@@ -227,10 +227,22 @@ class CatalogoServiceTest {
     CatalogoService.BajaCategoriaResultado resultado = service.bajaCategoria(1L);
 
     assertTrue(resultado.categoria().getEliminado());
-    assertEquals(1, resultado.productosDadosDeBaja().size());
-    assertEquals("Cafe", resultado.productosDadosDeBaja().get(0).getNombre());
-    assertTrue(productoRepository.buscarPorId(1L).orElseThrow().getEliminado());
+    assertTrue(resultado.productosDadosDeBaja().isEmpty());
+    assertFalse(productoRepository.buscarPorId(1L).orElseThrow().getEliminado());
     assertTrue(productoRepository.buscarPorId(2L).orElseThrow().getEliminado());
+  }
+
+  @Test
+  void bajaCategoriaRechazaUnaCategoriaYaDadaDeBaja() {
+    FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+    FakeProductoRepository productoRepository = new FakeProductoRepository();
+    categoriaRepository.add(crearCategoria(1L, "Bebidas", true));
+    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+
+    IllegalStateException exception =
+        assertThrows(IllegalStateException.class, () -> service.bajaCategoria(1L));
+
+    assertEquals("Error: la categoria ya se encuentra dada de baja.", exception.getMessage());
   }
 
   @Test

@@ -132,6 +132,13 @@ HU-06 queda implementada en la modificacion de categorias:
 3. Los campos en blanco conservan el valor previo.
 4. La categoria modificada se persiste en la base.
 
+HU-07 queda implementada en la baja logica de categorias:
+
+1. La consola usa la opcion de baja del submenu de categorias.
+2. La categoria se marca como eliminada sin borrar productos asociados.
+3. La confirmacion muestra el nombre de la categoria dada de baja.
+4. La categoria deja de aparecer en los listados activos.
+
 ## Capa de servicio
 
 `CatalogoService` concentra la logica de negocio que usa la consola:
