@@ -278,6 +278,18 @@ class MainTest {
   }
 
   @Test
+  void testAltaCategoriaDescripcionVacia() {
+    FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
+    FakeProductoRepository prodRepo = new FakeProductoRepository();
+    Scanner scanner = new Scanner("1\n1\nBebidas\n\n0\n0\n");
+    Main main = new Main(scanner, catRepo, prodRepo);
+    ejecutar(main);
+    String output = outContent.toString();
+    assertTrue(output.contains("Categoria creada correctamente"));
+    assertEquals("", catRepo.buscarPorId(1L).map(Categoria::getDescripcion).orElse("x"));
+  }
+
+  @Test
   void testAltaCategoriaBlankNameThenValid() {
     FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
     FakeProductoRepository prodRepo = new FakeProductoRepository();

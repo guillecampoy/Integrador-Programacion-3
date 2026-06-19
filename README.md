@@ -118,6 +118,13 @@ HU-04 queda implementada en `PedidoRepository`:
 3. `buscarPorEstado(Estado)` filtra pedidos activos por estado.
 4. Ambas consultas usan JPQL tipado con parámetros nombrados y cierre explicito del `EntityManager`.
 
+HU-05 queda implementada en el alta de categorias:
+
+1. La consola solicita nombre y descripcion.
+2. El nombre sigue siendo obligatorio.
+3. La descripcion es opcional y se guarda vacia si el operador no ingresa texto.
+4. La categoria se persiste con `eliminado = false` y se muestra el ID generado.
+
 ## Capa de servicio
 
 `CatalogoService` concentra la logica de negocio que usa la consola:

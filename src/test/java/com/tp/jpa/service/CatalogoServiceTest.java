@@ -60,6 +60,19 @@ class CatalogoServiceTest {
   }
 
   @Test
+  void crearCategoriaPermiteDescripcionVacia() {
+    FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, new FakeProductoRepository());
+
+    Categoria categoria = service.crearCategoria("Bebidas", "   ");
+
+    assertEquals("", categoria.getDescripcion());
+    assertFalse(categoria.getEliminado());
+    assertEquals(1, categoriaRepository.guardarLlamadas);
+  }
+
+  @Test
   void crearProductoRechazaPrecioYStockInvalidosAntesDeGuardar() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     FakeProductoRepository productoRepository = new FakeProductoRepository();

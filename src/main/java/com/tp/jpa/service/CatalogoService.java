@@ -37,7 +37,7 @@ public class CatalogoService {
 
   public Categoria crearCategoria(String nombre, String descripcion) {
     String nombreNormalizado = requerirTexto(nombre, "El nombre de la categoria");
-    String descripcionNormalizada = requerirTexto(descripcion, "La descripcion de la categoria");
+    String descripcionNormalizada = descripcion == null ? "" : descripcion.trim();
 
     Categoria categoria = new Categoria();
     categoria.setNombre(nombreNormalizado);

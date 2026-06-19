@@ -396,11 +396,7 @@ public class Main {
             prompt("Nombre"),
             texto -> !texto.isBlank(),
             "Error: el nombre de la categoria es obligatorio. No se guardo la categoria.");
-    String descripcion =
-        entrada.leerTexto(
-            prompt("Descripcion"),
-            texto -> !texto.isBlank(),
-            "Error: la descripcion de la categoria es obligatoria para el modelo actual.");
+    String descripcion = leerLinea(prompt("Descripcion"));
 
     try {
       Categoria guardada = catalogoService.crearCategoria(nombre, descripcion);
