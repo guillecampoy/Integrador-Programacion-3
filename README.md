@@ -97,7 +97,12 @@ HU-01 queda implementada en `BaseRepository<T>`, que resuelve la infraestructura
 5. Compatibilidad con `cambiarEstadoEliminado()` para el resto del proyecto.
 6. Obtencion del siguiente id logico cuando hace falta para pruebas o utilidades.
 
-`ProductoRepository` agrega la consulta JPQL para filtrar productos por categoria activa.
+HU-02 queda implementada en los repositorios concretos:
+
+1. `CategoriaRepository` extiende `BaseRepository<Categoria>`.
+2. `ProductoRepository` extiende `BaseRepository<Producto>`.
+3. `ProductoRepository.buscarPorCategoria(Long)` ejecuta JPQL tipado con `:catId` y `eliminado = false`.
+4. La consulta devuelve solo productos activos de la categoria indicada.
 
 ## Capa de servicio
 
