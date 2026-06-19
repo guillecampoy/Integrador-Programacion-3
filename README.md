@@ -146,6 +146,13 @@ HU-08 queda implementada en el alta de productos:
 3. La categoria seleccionada se asocia al producto guardado.
 4. El producto se persiste con `eliminado = false` y se muestra el ID generado.
 
+HU-09 queda implementada en la modificacion de productos:
+
+1. La consola lista productos activos antes de pedir el ID.
+2. El operador ve los valores actuales antes de editar.
+3. Los campos en blanco conservan el valor previo.
+4. La modificacion valida precio y stock antes de persistir.
+
 ## Capa de servicio
 
 `CatalogoService` concentra la logica de negocio que usa la consola:

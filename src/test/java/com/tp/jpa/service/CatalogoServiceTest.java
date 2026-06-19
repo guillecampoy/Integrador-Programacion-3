@@ -162,6 +162,24 @@ class CatalogoServiceTest {
   }
 
   @Test
+  void modificarProductoConCamposVaciosConservaLosValoresPrevios() {
+    FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+    FakeProductoRepository productoRepository = new FakeProductoRepository();
+    Categoria categoria = crearCategoria(1L, "Bebidas", false);
+    Producto producto = crearProducto(1L, "Cafe", categoria, false);
+    productoRepository.add(producto);
+    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+
+    Producto modificado = service.modificarProducto(1L, "  ", null, null, null);
+
+    assertEquals("Cafe", modificado.getNombre());
+    assertEquals(100.0, modificado.getPrecio());
+    assertEquals(5, modificado.getStock());
+    assertEquals(1L, modificado.getCategoria().getId());
+    assertEquals(1, productoRepository.guardarLlamadas);
+  }
+
+  @Test
   void modificarProductoPermiteReasignarCategoriaActiva() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     FakeProductoRepository productoRepository = new FakeProductoRepository();
@@ -200,6 +218,25 @@ class CatalogoServiceTest {
     assertEquals(
         "Error: no existe una categoria activa con el ID indicado.", exception.getMessage());
     assertEquals(1L, productoRepository.buscarPorId(1L).orElseThrow().getCategoria().getId());
+    assertEquals(0, productoRepository.guardarLlamadas);
+  }
+
+  @Test
+  void modificarProductoRechazaProductoDadoDeBaja() {
+    FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+    FakeProductoRepository productoRepository = new FakeProductoRepository();
+    Categoria categoria = crearCategoria(1L, "Bebidas", false);
+    Producto producto = crearProducto(1L, "Cafe", categoria, true);
+    productoRepository.add(producto);
+    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> service.modificarProducto(1L, "Cafe premium", 200.0, 8, null));
+
+    assertEquals("Error: no existe un producto activo con el ID indicado.", exception.getMessage());
+    assertEquals("Cafe", productoRepository.buscarPorId(1L).orElseThrow().getNombre());
     assertEquals(0, productoRepository.guardarLlamadas);
   }
 

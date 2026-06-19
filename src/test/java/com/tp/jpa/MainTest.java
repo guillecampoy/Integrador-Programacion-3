@@ -519,6 +519,9 @@ class MainTest {
     String output = outContent.toString();
     assertTrue(output.contains("Producto modificado correctamente"));
     assertEquals("Modificado", prodRepo.buscarPorId(1L).map(Producto::getNombre).orElse(""));
+    assertEquals(100.0, prodRepo.buscarPorId(1L).map(Producto::getPrecio).orElse(-1.0));
+    assertEquals(5, prodRepo.buscarPorId(1L).map(Producto::getStock).orElse(-1));
+    assertEquals("test.png", prodRepo.buscarPorId(1L).map(Producto::getImagen).orElse(""));
   }
 
   @Test
