@@ -111,6 +111,13 @@ HU-03 queda implementada en `UsuarioRepository`:
 3. La busqueda soporta coincidencia parcial y excluye usuarios eliminados.
 4. La consulta usa JPQL tipado con `:mail`, `getResultList()` y cierre explicito del `EntityManager`.
 
+HU-04 queda implementada en `PedidoRepository`:
+
+1. `PedidoRepository` extiende `BaseRepository<Pedido>`.
+2. `buscarPorUsuario(Long)` filtra pedidos activos por `usuario.id`.
+3. `buscarPorEstado(Estado)` filtra pedidos activos por estado.
+4. Ambas consultas usan JPQL tipado con parámetros nombrados y cierre explicito del `EntityManager`.
+
 ## Capa de servicio
 
 `CatalogoService` concentra la logica de negocio que usa la consola:
