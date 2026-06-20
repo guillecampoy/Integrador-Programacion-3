@@ -1,22 +1,54 @@
 package com.tp.jpa.service;
 
 import com.tp.jpa.model.Categoria;
+import com.tp.jpa.model.Pedido;
 import com.tp.jpa.model.Producto;
+import com.tp.jpa.model.Usuario;
+import com.tp.jpa.model.enums.Estado;
+import com.tp.jpa.model.enums.FormaPago;
+import com.tp.jpa.model.enums.Rol;
 import com.tp.jpa.repository.CategoriaRepository;
+import com.tp.jpa.repository.PedidoRepository;
 import com.tp.jpa.repository.ProductoRepository;
+import com.tp.jpa.repository.UsuarioRepository;
+import com.tp.jpa.util.JPAUtil;
+import jakarta.persistence.EntityManager;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public class CatalogoService {
   private final CategoriaRepository categoriaRepository;
   private final ProductoRepository productoRepository;
+  private final UsuarioRepository usuarioRepository;
+  private final PedidoRepository pedidoRepository;
 
   public record BajaCategoriaResultado(Categoria categoria, List<Producto> productosDadosDeBaja) {}
 
+  public record LineaPedidoSolicitud(Long productoId, int cantidad) {}
+
   public CatalogoService(
       CategoriaRepository categoriaRepository, ProductoRepository productoRepository) {
+    this(categoriaRepository, productoRepository, new UsuarioRepository(), new PedidoRepository());
+  }
+
+  public CatalogoService(
+      CategoriaRepository categoriaRepository,
+      ProductoRepository productoRepository,
+      UsuarioRepository usuarioRepository) {
+    this(categoriaRepository, productoRepository, usuarioRepository, new PedidoRepository());
+  }
+
+  public CatalogoService(
+      CategoriaRepository categoriaRepository,
+      ProductoRepository productoRepository,
+      UsuarioRepository usuarioRepository,
+      PedidoRepository pedidoRepository) {
     this.categoriaRepository = categoriaRepository;
     this.productoRepository = productoRepository;
+    this.usuarioRepository = usuarioRepository;
+    this.pedidoRepository = pedidoRepository;
   }
 
   public List<Categoria> listarCategoriasActivas() {
@@ -31,13 +63,221 @@ public class CatalogoService {
     return productoRepository.listarActivos();
   }
 
+  public List<Producto> listarProductosDisponiblesParaPedido() {
+    return productoRepository.listarActivos().stream()
+        .filter(producto -> Boolean.TRUE.equals(producto.getDisponible()))
+        .filter(producto -> producto.getStock() > 0)
+        .sorted((producto1, producto2) -> Long.compare(producto1.getId(), producto2.getId()))
+        .toList();
+  }
+
   public List<Producto> listarProductosEliminados() {
     return productoRepository.listarEliminados();
   }
 
+  public List<Usuario> listarUsuariosActivos() {
+    return usuarioRepository.listarActivos();
+  }
+
+  public Pedido crearPedido(
+      Long usuarioId, FormaPago formaPago, List<LineaPedidoSolicitud> lineasPedido) {
+    validarId(usuarioId, "usuario");
+    validarFormaPago(formaPago);
+    if (lineasPedido == null || lineasPedido.isEmpty()) {
+      throw new IllegalArgumentException("Error: el pedido debe tener al menos un detalle.");
+    }
+
+    EntityManager entityManager = JPAUtil.getEntityManagerFactory().createEntityManager();
+    try {
+      entityManager.getTransaction().begin();
+
+      Usuario usuario = entityManager.find(Usuario.class, usuarioId);
+      if (usuario == null || Boolean.TRUE.equals(usuario.getEliminado())) {
+        throw new IllegalArgumentException(
+            "Error: no existe un usuario activo con el ID indicado.");
+      }
+
+      Pedido pedido = new Pedido();
+      pedido.setFecha(LocalDate.now());
+      pedido.setEstado(Estado.PENDIENTE);
+      pedido.setFormaPago(formaPago);
+      pedido.setUsuario(usuario);
+      pedido.setTotal(0.0);
+      pedido.setEliminado(false);
+      pedido.setCreatedAt(LocalDateTime.now());
+
+      for (LineaPedidoSolicitud lineaPedido : lineasPedido) {
+        if (lineaPedido == null) {
+          throw new IllegalArgumentException("Error: el pedido debe tener al menos un detalle.");
+        }
+        validarId(lineaPedido.productoId(), "producto");
+        if (lineaPedido.cantidad() < 1) {
+          throw new IllegalArgumentException("Error: la cantidad debe ser mayor o igual a 1.");
+        }
+
+        Producto producto = entityManager.find(Producto.class, lineaPedido.productoId());
+        if (producto == null || Boolean.TRUE.equals(producto.getEliminado())) {
+          throw new IllegalArgumentException(
+              "Error: no existe un producto activo con el ID indicado.");
+        }
+        if (!Boolean.TRUE.equals(producto.getDisponible())) {
+          throw new IllegalStateException(
+              "Error: el producto no se encuentra disponible para pedidos.");
+        }
+        if (producto.getStock() < lineaPedido.cantidad()) {
+          throw new IllegalStateException(
+              "Error: stock insuficiente para el producto " + producto.getNombre() + ".");
+        }
+
+        producto.setStock(producto.getStock() - lineaPedido.cantidad());
+        pedido.addDetallePedido(lineaPedido.cantidad(), producto);
+      }
+
+      pedido.calcularTotal();
+      entityManager.persist(pedido);
+      entityManager.getTransaction().commit();
+      return pedido;
+    } catch (RuntimeException exception) {
+      if (entityManager.getTransaction().isActive()) {
+        entityManager.getTransaction().rollback();
+      }
+      throw exception;
+    } finally {
+      entityManager.close();
+    }
+  }
+
+  public Pedido obtenerPedidoActivo(Long id) {
+    validarId(id, "pedido");
+    Pedido pedido =
+        pedidoRepository
+            .buscarPorId(id)
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Error: no existe un pedido activo con el ID indicado."));
+    if (Boolean.TRUE.equals(pedido.getEliminado())) {
+      throw new IllegalArgumentException("Error: no existe un pedido activo con el ID indicado.");
+    }
+    return pedido;
+  }
+
+  public Pedido cambiarEstadoPedido(Long id, Estado nuevoEstado) {
+    validarId(id, "pedido");
+    validarEstadoPedido(nuevoEstado);
+    Pedido pedido = obtenerPedidoActivo(id);
+    pedido.setEstado(nuevoEstado);
+    return pedidoRepository.guardar(pedido);
+  }
+
+  public List<Pedido> listarPedidosActivosPorUsuario(Long usuarioId) {
+    validarId(usuarioId, "usuario");
+    obtenerUsuarioActivo(usuarioId);
+    return pedidoRepository.buscarPorUsuario(usuarioId);
+  }
+
+  public List<Pedido> listarPedidosActivosPorEstado(Estado estado) {
+    validarEstadoPedido(estado);
+    return pedidoRepository.buscarPorEstado(estado);
+  }
+
+  public double totalFacturadoTerminados() {
+    return pedidoRepository.buscarPorEstado(Estado.TERMINADO).stream()
+        .mapToDouble(pedido -> pedido.getTotal() == null ? 0.0 : pedido.getTotal())
+        .sum();
+  }
+
+  public Pedido bajaPedido(Long id) {
+    validarId(id, "pedido");
+    Pedido pedido = obtenerPedidoActivo(id);
+    if (Boolean.TRUE.equals(pedido.getEliminado())) {
+      throw new IllegalStateException("Error: el pedido ya se encuentra dado de baja.");
+    }
+    if (!pedidoRepository.eliminarLogico(id)) {
+      throw new IllegalStateException("Error: no existe un pedido activo con el ID indicado.");
+    }
+    return pedido;
+  }
+
+  public Usuario obtenerUsuarioActivo(Long id) {
+    validarId(id, "usuario");
+    Usuario usuario = obtenerUsuario(id);
+    if (Boolean.TRUE.equals(usuario.getEliminado())) {
+      throw new IllegalArgumentException("Error: no existe un usuario activo con el ID indicado.");
+    }
+    return usuario;
+  }
+
+  public Usuario crearUsuario(
+      String nombre, String apellido, String mail, String celular, String contrasenia, Rol rol) {
+    String nombreNormalizado = requerirTexto(nombre, "El nombre del usuario");
+    String apellidoNormalizado = requerirTexto(apellido, "El apellido del usuario");
+    String mailNormalizado = requerirTexto(mail, "El mail del usuario");
+    String celularNormalizado = requerirTexto(celular, "El celular del usuario");
+    String contraseniaNormalizada = requerirTexto(contrasenia, "La contrasenia del usuario");
+    validarRol(rol);
+    validarMailUnico(mailNormalizado, null);
+
+    Usuario usuario = new Usuario();
+    usuario.setNombre(nombreNormalizado);
+    usuario.setApellido(apellidoNormalizado);
+    usuario.setMail(mailNormalizado);
+    usuario.setCelular(celularNormalizado);
+    usuario.setContrasenia(contraseniaNormalizada);
+    usuario.setRol(rol);
+    usuario.setEliminado(false);
+    usuario.setCreatedAt(LocalDateTime.now());
+    return usuarioRepository.guardar(usuario);
+  }
+
+  public Usuario modificarUsuario(
+      Long id,
+      String nombre,
+      String apellido,
+      String mail,
+      String celular,
+      String contrasenia,
+      Rol rol) {
+    validarId(id, "usuario");
+    Usuario usuario = obtenerUsuarioActivo(id);
+    if (nombre != null && !nombre.isBlank()) {
+      usuario.setNombre(requerirTexto(nombre, "El nombre del usuario"));
+    }
+    if (apellido != null && !apellido.isBlank()) {
+      usuario.setApellido(requerirTexto(apellido, "El apellido del usuario"));
+    }
+    if (mail != null && !mail.isBlank()) {
+      String mailNormalizado = requerirTexto(mail, "El mail del usuario");
+      if (!mailNormalizado.equalsIgnoreCase(usuario.getMail())) {
+        validarMailUnico(mailNormalizado, id);
+      }
+      usuario.setMail(mailNormalizado);
+    }
+    if (celular != null && !celular.isBlank()) {
+      usuario.setCelular(requerirTexto(celular, "El celular del usuario"));
+    }
+    if (contrasenia != null && !contrasenia.isBlank()) {
+      usuario.setContrasenia(requerirTexto(contrasenia, "La contrasenia del usuario"));
+    }
+    if (rol != null) {
+      validarRol(rol);
+      usuario.setRol(rol);
+    }
+    return usuarioRepository.guardar(usuario);
+  }
+
+  public Usuario bajaUsuario(Long id) {
+    validarId(id, "usuario");
+    Usuario usuario = obtenerUsuarioActivo(id);
+    if (Boolean.TRUE.equals(usuario.getEliminado())) {
+      throw new IllegalStateException("Error: el usuario ya se encuentra dado de baja.");
+    }
+    return usuarioRepository.cambiarEstadoEliminado(id, true);
+  }
+
   public Categoria crearCategoria(String nombre, String descripcion) {
     String nombreNormalizado = requerirTexto(nombre, "El nombre de la categoria");
-    String descripcionNormalizada = requerirTexto(descripcion, "La descripcion de la categoria");
+    String descripcionNormalizada = descripcion == null ? "" : descripcion.trim();
 
     Categoria categoria = new Categoria();
     categoria.setNombre(nombreNormalizado);
@@ -65,13 +305,8 @@ public class CatalogoService {
     if (Boolean.TRUE.equals(categoria.getEliminado())) {
       throw new IllegalStateException("Error: la categoria ya se encuentra dada de baja.");
     }
-    List<Producto> productosActivos = productoRepository.buscarPorCategoria(id);
-    List<Producto> productosDadosDeBaja =
-        productosActivos.stream()
-            .map(producto -> productoRepository.cambiarEstadoEliminado(producto.getId(), true))
-            .toList();
     Categoria categoriaBaja = categoriaRepository.cambiarEstadoEliminado(id, true);
-    return new BajaCategoriaResultado(categoriaBaja, productosDadosDeBaja);
+    return new BajaCategoriaResultado(categoriaBaja, List.of());
   }
 
   public Categoria restaurarCategoria(Long id) {
@@ -94,10 +329,17 @@ public class CatalogoService {
   }
 
   public Producto crearProducto(
-      Long categoriaId, String nombre, String descripcion, double precio, int stock) {
+      Long categoriaId,
+      String nombre,
+      String descripcion,
+      double precio,
+      int stock,
+      String imagen,
+      boolean disponible) {
     validarId(categoriaId, "categoria");
     String nombreNormalizado = requerirTexto(nombre, "El nombre del producto");
     String descripcionNormalizada = requerirTexto(descripcion, "La descripcion del producto");
+    String imagenNormalizada = requerirTexto(imagen, "La imagen del producto");
     validarPrecio(precio);
     validarStock(stock);
 
@@ -107,8 +349,8 @@ public class CatalogoService {
     producto.setDescripcion(descripcionNormalizada);
     producto.setPrecio(precio);
     producto.setStock(stock);
-    producto.setImagen("sin-imagen");
-    producto.setDisponible(true);
+    producto.setImagen(imagenNormalizada);
+    producto.setDisponible(disponible);
     producto.setEliminado(false);
     producto.setCreatedAt(LocalDateTime.now());
     producto.setCategoria(referenciaCategoria(categoria));
@@ -220,6 +462,16 @@ public class CatalogoService {
                     "Error: no existe un producto activo con el ID indicado."));
   }
 
+  private Usuario obtenerUsuario(Long id) {
+    validarId(id, "usuario");
+    return usuarioRepository
+        .buscarPorId(id)
+        .orElseThrow(
+            () ->
+                new IllegalArgumentException(
+                    "Error: no existe un usuario activo con el ID indicado."));
+  }
+
   private Categoria referenciaCategoria(Categoria categoria) {
     Categoria referencia = new Categoria();
     referencia.setId(categoria.getId());
@@ -246,6 +498,34 @@ public class CatalogoService {
   private void validarStock(Integer stock) {
     if (stock == null || stock < 0) {
       throw new IllegalArgumentException("Error: el stock debe ser mayor o igual a 0.");
+    }
+  }
+
+  private void validarRol(Rol rol) {
+    if (rol == null) {
+      throw new IllegalArgumentException("Error: el rol del usuario es obligatorio.");
+    }
+  }
+
+  private void validarEstadoPedido(Estado estado) {
+    if (estado == null) {
+      throw new IllegalArgumentException("Error: el estado del pedido es obligatorio.");
+    }
+  }
+
+  private void validarFormaPago(FormaPago formaPago) {
+    if (formaPago == null) {
+      throw new IllegalArgumentException("Error: la forma de pago es obligatoria.");
+    }
+  }
+
+  private void validarMailUnico(String mail, Long usuarioIdActual) {
+    Optional<Usuario> usuarioExistente = usuarioRepository.buscarPorMail(mail);
+    if (usuarioExistente.isPresent()
+        && usuarioExistente.get().getMail() != null
+        && usuarioExistente.get().getMail().equalsIgnoreCase(mail)
+        && (usuarioIdActual == null || !usuarioIdActual.equals(usuarioExistente.get().getId()))) {
+      throw new IllegalStateException("Error: ya existe un usuario activo con ese mail.");
     }
   }
 
