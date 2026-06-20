@@ -166,6 +166,46 @@ class CatalogoServicePedidosTest {
     assertEquals("Error: no existe un pedido activo con el ID indicado.", exception.getMessage());
   }
 
+  @Test
+  void bajaPedidoMarcaEliminadoYConservaStockYDetalles() {
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
+    Usuario usuario = usuarioRepository.guardar(crearUsuario("ana@example.com"));
+    Categoria categoria = categoriaRepository.guardar(crearCategoria("Bebidas"));
+    Producto cafe = productoRepository.guardar(crearProducto(categoria, "Cafe", 10.0, 10, true));
+
+    Pedido pedido =
+        service.crearPedido(
+            usuario.getId(),
+            FormaPago.EFECTIVO,
+            List.of(new CatalogoService.LineaPedidoSolicitud(cafe.getId(), 2)));
+
+    service.bajaPedido(pedido.getId());
+
+    assertTrue(Boolean.TRUE.equals(pedidoRepository.buscarPorId(pedido.getId()).orElseThrow().getEliminado()));
+    assertEquals(8, productoRepository.buscarPorId(cafe.getId()).orElseThrow().getStock());
+    assertTrue(pedidoRepository.buscarPorUsuario(usuario.getId()).isEmpty());
+    try (EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager()) {
+      Number cantidadDetalles =
+          (Number)
+              em.createNativeQuery("select count(*) from DetallePedido where pedido_id = ?")
+                  .setParameter(1, pedido.getId())
+                  .getSingleResult();
+      assertEquals(1L, cantidadDetalles.longValue());
+    }
+  }
+
+  @Test
+  void bajaPedidoRechazaPedidoInexistente() {
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
+
+    IllegalArgumentException exception =
+        assertThrows(IllegalArgumentException.class, () -> service.bajaPedido(99L));
+
+    assertEquals("Error: no existe un pedido activo con el ID indicado.", exception.getMessage());
+  }
+
   private Usuario crearUsuario(String mail) {
     Usuario usuario = new Usuario();
     usuario.setNombre("Ana");

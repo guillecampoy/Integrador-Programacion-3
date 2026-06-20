@@ -166,6 +166,18 @@ public class CatalogoService {
     return pedidoRepository.guardar(pedido);
   }
 
+  public Pedido bajaPedido(Long id) {
+    validarId(id, "pedido");
+    Pedido pedido = obtenerPedidoActivo(id);
+    if (Boolean.TRUE.equals(pedido.getEliminado())) {
+      throw new IllegalStateException("Error: el pedido ya se encuentra dado de baja.");
+    }
+    if (!pedidoRepository.eliminarLogico(id)) {
+      throw new IllegalStateException("Error: no existe un pedido activo con el ID indicado.");
+    }
+    return pedido;
+  }
+
   public Usuario obtenerUsuarioActivo(Long id) {
     validarId(id, "usuario");
     Usuario usuario = obtenerUsuario(id);

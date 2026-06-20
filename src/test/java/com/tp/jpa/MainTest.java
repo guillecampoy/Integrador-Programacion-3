@@ -298,6 +298,13 @@ class MainTest {
       pedido.setEstado(nuevoEstado);
       return pedido;
     }
+
+    @Override
+    public Pedido bajaPedido(Long id) {
+      Pedido pedido = obtenerPedidoActivo(id);
+      pedido.setEliminado(true);
+      return pedido;
+    }
   }
 
   // ---- Helper: build a valid Categoria for testing ----
@@ -1000,6 +1007,31 @@ class MainTest {
     assertTrue(output.contains("Estado actual"));
     assertTrue(output.contains("Pedido actualizado correctamente"));
     assertTrue(output.contains("CONFIRMADO"));
+  }
+
+  @Test
+  void testBajaPedidoDesdeMenuPedidos() {
+    Usuario usuario = crearUsuario(1L, "Ana", "ana@example.com", false);
+    FakeCatalogoService catalogoService = new FakeCatalogoService(List.of(usuario), List.of());
+    Pedido pedido = new Pedido();
+    pedido.setId(10L);
+    pedido.setFecha(java.time.LocalDate.now());
+    pedido.setEstado(Estado.CONFIRMADO);
+    pedido.setFormaPago(FormaPago.EFECTIVO);
+    pedido.setUsuario(usuario);
+    pedido.setEliminado(false);
+    pedido.setCreatedAt(LocalDateTime.now());
+    pedido.setTotal(42.0);
+    catalogoService.addPedido(pedido);
+
+    Scanner scanner = new Scanner("6\n3\n10\n0\n0\n");
+    Main main = new Main(scanner, catalogoService);
+    ejecutar(main);
+
+    String output = outContent.toString();
+    assertTrue(output.contains("Baja logica de pedido"));
+    assertTrue(output.contains("Pedido dado de baja correctamente"));
+    assertTrue(output.contains("42.0"));
   }
 
   @Test

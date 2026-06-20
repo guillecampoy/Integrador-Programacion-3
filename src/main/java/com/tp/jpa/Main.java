@@ -189,10 +189,11 @@ public class Main {
     boolean volver = false;
     while (!volver) {
       mostrarMenuPedidos();
-      String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2"));
+      String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2", "3"));
       switch (opcion) {
         case "1" -> altaPedido();
         case "2" -> cambiarEstadoPedido();
+        case "3" -> bajaPedido();
         case "0" -> volver = true;
         default -> imprimirError("Opcion invalida.");
       }
@@ -718,6 +719,34 @@ public class Main {
     }
   }
 
+  private void bajaPedido() {
+    imprimirTitulo("Baja logica de pedido");
+    long id =
+        entrada.leerLong(
+            prompt("Ingrese ID de pedido"),
+            valor -> valor > 0,
+            "Error: ingrese un ID numerico mayor a 0.");
+
+    Pedido pedido;
+    try {
+      pedido = catalogoService.obtenerPedidoActivo(id);
+    } catch (RuntimeException exception) {
+      imprimirError(exception.getMessage());
+      return;
+    }
+
+    try {
+      Pedido dadoDeBaja = catalogoService.bajaPedido(id);
+      imprimirMensaje(
+          "Pedido dado de baja correctamente. ID: "
+              + dadoDeBaja.getId()
+              + " | Total: "
+              + pedido.getTotal());
+    } catch (RuntimeException exception) {
+      imprimirError("No se pudo dar de baja el pedido: " + exception.getMessage());
+    }
+  }
+
   private void buscarUsuarioPorMail() {
     imprimirTitulo("Buscar usuario por mail");
     String mail = entrada.leerTextoNoVacio(prompt("Mail"));
@@ -1017,6 +1046,7 @@ public class Main {
     System.out.println(SEPARADOR);
     imprimirOpcion("1", "Alta de pedido");
     imprimirOpcion("2", "Cambiar estado de pedido");
+    imprimirOpcion("3", "Baja logica de pedido");
     imprimirOpcion("0", "Volver");
     System.out.println(SEPARADOR);
   }

@@ -2,7 +2,7 @@
 
 Backend de consola para el TPI de Programacion III con Java, Gradle, JPA/Hibernate y H2 en archivo.
 
-Esta rama documenta una evolucion sobre la entrega previa: el proyecto ya consolida el nucleo de catalogo y persistencia, mantiene el modelo de dominio alineado con el UML de `docs/diagrama.puml` y suma la busqueda de usuarios por mail, el alta de pedidos y el cambio de estado de pedidos desde la consola.
+Esta rama documenta una evolucion sobre la entrega previa: el proyecto ya consolida el nucleo de catalogo y persistencia, mantiene el modelo de dominio alineado con el UML de `docs/diagrama.puml` y suma la busqueda de usuarios por mail, el alta de pedidos, el cambio de estado de pedidos y la baja logica de pedidos desde la consola.
 
 ## Estado actual
 
@@ -22,6 +22,7 @@ Lo que hoy expone la aplicacion desde consola es:
 12. Busqueda de usuarios por mail.
 13. Alta de pedidos con detalles.
 14. Cambio de estado de pedidos.
+15. Baja logica de pedidos.
 
 El dominio ya incluye `Usuario`, `Pedido` y `DetallePedido` para sostener la evolucion del modelo, la semilla y los tests de relacion, y ahora esas entidades tambien forman parte del menu operativo.
 
@@ -220,6 +221,13 @@ HU-17 queda implementada en el cambio de estado de pedidos:
 4. El pedido debe existir y seguir activo para poder actualizarse.
 5. La confirmacion muestra ID y nuevo estado del pedido.
 
+HU-18 queda implementada en la baja logica de pedidos:
+
+1. La consola usa la opcion de pedidos del menu principal.
+2. La baja solicita el ID del pedido y valida que exista y siga activo.
+3. La baja es logica y conserva el historial, los detalles y el stock.
+4. La confirmacion muestra ID y total del pedido dado de baja.
+
 ## Capa de servicio
 
 `CatalogoService` concentra la logica de negocio que usa la consola:
@@ -234,6 +242,7 @@ HU-17 queda implementada en el cambio de estado de pedidos:
 8. Buscar productos activos por categoria.
 9. Registrar pedidos con detalles y descuento atomico de stock.
 10. Cambiar el estado de pedidos activos.
+11. Dar de baja pedidos sin restaurar stock.
 
 La consola delega en esta capa para evitar mezclar input de usuario con reglas de negocio.
 
@@ -296,6 +305,7 @@ Submenu de pedidos:
 ```text
 1. Alta de pedido
 2. Cambiar estado de pedido
+3. Baja logica de pedido
 0. Volver
 ```
 
@@ -334,7 +344,7 @@ La base del proyecto ya pasa la suite de tests:
 
 La validacion cubre el contrato de HU-01 y el alta de pedidos con pruebas sobre guardado nuevo, guardado con id existente, busqueda, listado activo, borrado logico, transaccion atómica, descuento de stock y rollback.
 
-Tambien cubre HU-17 con pruebas de cambio de estado y rechazo de pedidos eliminados.
+Tambien cubre HU-17 y HU-18 con pruebas de cambio de estado, baja logica y rechazo de pedidos eliminados.
 
 Y la aplicacion puede ejecutarse desde consola con:
 
