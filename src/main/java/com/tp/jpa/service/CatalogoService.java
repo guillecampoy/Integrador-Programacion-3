@@ -103,6 +103,7 @@ public class CatalogoService {
       pedido.setFormaPago(formaPago);
       pedido.setUsuario(usuario);
       pedido.setTotal(0.0);
+      pedido.setEliminado(false);
       pedido.setCreatedAt(LocalDateTime.now());
 
       for (LineaPedidoSolicitud lineaPedido : lineasPedido) {
@@ -164,6 +165,12 @@ public class CatalogoService {
     Pedido pedido = obtenerPedidoActivo(id);
     pedido.setEstado(nuevoEstado);
     return pedidoRepository.guardar(pedido);
+  }
+
+  public List<Pedido> listarPedidosActivosPorUsuario(Long usuarioId) {
+    validarId(usuarioId, "usuario");
+    obtenerUsuarioActivo(usuarioId);
+    return pedidoRepository.buscarPorUsuario(usuarioId);
   }
 
   public Pedido bajaPedido(Long id) {

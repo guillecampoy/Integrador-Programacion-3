@@ -167,6 +167,38 @@ class CatalogoServicePedidosTest {
   }
 
   @Test
+  void listarPedidosActivosPorUsuarioDevuelveSoloActivosDelUsuario() {
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
+    Usuario ana = usuarioRepository.guardar(crearUsuario("ana@example.com"));
+    Usuario bruno = usuarioRepository.guardar(crearUsuario("bruno@example.com"));
+    Categoria categoria = categoriaRepository.guardar(crearCategoria("Bebidas"));
+    Producto cafe = productoRepository.guardar(crearProducto(categoria, "Cafe", 10.0, 10, true));
+
+    Pedido pedidoActivo =
+        service.crearPedido(
+            ana.getId(),
+            FormaPago.EFECTIVO,
+            List.of(new CatalogoService.LineaPedidoSolicitud(cafe.getId(), 1)));
+    Pedido pedidoEliminado =
+        service.crearPedido(
+            ana.getId(),
+            FormaPago.TARJETA,
+            List.of(new CatalogoService.LineaPedidoSolicitud(cafe.getId(), 1)));
+    service.crearPedido(
+        bruno.getId(),
+        FormaPago.TRANSFERENCIA,
+        List.of(new CatalogoService.LineaPedidoSolicitud(cafe.getId(), 1)));
+    pedidoRepository.eliminarLogico(pedidoEliminado.getId());
+
+    List<Pedido> pedidos = service.listarPedidosActivosPorUsuario(ana.getId());
+
+    assertEquals(1, pedidos.size());
+    assertEquals(pedidoActivo.getId(), pedidos.get(0).getId());
+    assertEquals(FormaPago.EFECTIVO, pedidos.get(0).getFormaPago());
+  }
+
+  @Test
   void bajaPedidoMarcaEliminadoYConservaStockYDetalles() {
     CatalogoService service =
         new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);

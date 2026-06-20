@@ -159,9 +159,10 @@ public class Main {
     boolean volver = false;
     while (!volver) {
       mostrarMenuReportes();
-      String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1"));
+      String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2"));
       switch (opcion) {
         case "1" -> productosPorCategoria();
+        case "2" -> pedidosPorUsuario();
         case "0" -> volver = true;
         default -> imprimirError("Opcion invalida.");
       }
@@ -339,6 +340,42 @@ public class Main {
 
     System.out.println("Productos activos de la categoria " + categoria.getNombre() + ":");
     imprimirProductosReporte(productos);
+  }
+
+  private void pedidosPorUsuario() {
+    imprimirTitulo("Pedidos por usuario");
+    List<Usuario> usuarios = catalogoService.listarUsuariosActivos();
+    if (usuarios.isEmpty()) {
+      imprimirMensaje("No hay usuarios activos disponibles.");
+      return;
+    }
+
+    imprimirUsuarios(usuarios);
+    Set<Long> idsValidos =
+        usuarios.stream().map(Usuario::getId).collect(java.util.stream.Collectors.toSet());
+    long usuarioId =
+        entrada.leerLong(
+            prompt("Seleccione ID de usuario"),
+            idsValidos::contains,
+            "Error: no existe un usuario activo con el ID indicado.");
+
+    Usuario usuario;
+    List<Pedido> pedidos;
+    try {
+      usuario = catalogoService.obtenerUsuarioActivo(usuarioId);
+      pedidos = catalogoService.listarPedidosActivosPorUsuario(usuarioId);
+    } catch (RuntimeException exception) {
+      imprimirError(exception.getMessage());
+      return;
+    }
+    if (pedidos.isEmpty()) {
+      imprimirMensaje("No hay pedidos activos para el usuario seleccionado.");
+      return;
+    }
+
+    System.out.println(
+        "Pedidos activos del usuario " + usuario.getNombre() + " " + usuario.getApellido() + ":");
+    imprimirPedidosReporte(pedidos);
   }
 
   private void modificarProducto() {
@@ -968,6 +1005,23 @@ public class Main {
             .toList());
   }
 
+  private void imprimirPedidosReporte(List<Pedido> pedidos) {
+    imprimirTabla(
+        new String[] {"ID", "Fecha", "Estado", "Forma de pago", "Total"},
+        pedidos.stream()
+            .sorted(java.util.Comparator.comparing(Pedido::getId))
+            .map(
+                pedido ->
+                    new String[] {
+                      pedido.getId().toString(),
+                      String.valueOf(pedido.getFecha()),
+                      pedido.getEstado() == null ? "" : pedido.getEstado().name(),
+                      pedido.getFormaPago() == null ? "" : pedido.getFormaPago().name(),
+                      pedido.getTotal().toString()
+                    })
+            .toList());
+  }
+
   private void imprimirValoresActuales(String[][] filas) {
     System.out.println("Valores actuales:");
     imprimirTabla(new String[] {"Campo", "Valor"}, List.of(filas));
@@ -1022,6 +1076,7 @@ public class Main {
     System.out.println("Reportes");
     System.out.println(SEPARADOR);
     imprimirOpcion("1", "Productos por categoria");
+    imprimirOpcion("2", "Pedidos por usuario");
     imprimirOpcion("0", "Volver");
     System.out.println(SEPARADOR);
   }

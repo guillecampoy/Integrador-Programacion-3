@@ -246,6 +246,17 @@ class MainTest {
     }
 
     @Override
+    public Usuario obtenerUsuarioActivo(Long id) {
+      return usuariosActivos.stream()
+          .filter(usuario -> Objects.equals(usuario.getId(), id))
+          .findFirst()
+          .orElseThrow(
+              () ->
+                  new IllegalArgumentException(
+                      "Error: no existe un usuario activo con el ID indicado."));
+    }
+
+    @Override
     public List<Producto> listarProductosDisponiblesParaPedido() {
       return productosDisponibles;
     }
@@ -304,6 +315,15 @@ class MainTest {
       Pedido pedido = obtenerPedidoActivo(id);
       pedido.setEliminado(true);
       return pedido;
+    }
+
+    @Override
+    public List<Pedido> listarPedidosActivosPorUsuario(Long usuarioId) {
+      return pedidos.values().stream()
+          .filter(pedido -> !Boolean.TRUE.equals(pedido.getEliminado()))
+          .filter(pedido -> pedido.getUsuario() != null && Objects.equals(pedido.getUsuario().getId(), usuarioId))
+          .sorted(Comparator.comparing(Pedido::getId))
+          .toList();
     }
   }
 
@@ -860,6 +880,53 @@ class MainTest {
     ejecutar(main);
     String output = outContent.toString();
     assertTrue(output.contains("No hay productos activos para la categoria seleccionada"));
+  }
+
+  @Test
+  void testPedidosPorUsuario() {
+    FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
+    FakeProductoRepository prodRepo = new FakeProductoRepository();
+    FakeUsuarioRepository userRepo = new FakeUsuarioRepository();
+    FakeCatalogoService catalogoService =
+        new FakeCatalogoService(List.of(crearUsuario(1L, "Ana", "ana@example.com", false)), List.of());
+
+    Usuario usuario = crearUsuario(1L, "Ana", "ana@example.com", false);
+    Pedido pedido = new Pedido();
+    pedido.setId(21L);
+    pedido.setFecha(java.time.LocalDate.of(2026, 6, 20));
+    pedido.setEstado(Estado.CONFIRMADO);
+    pedido.setFormaPago(FormaPago.TRANSFERENCIA);
+    pedido.setUsuario(usuario);
+    pedido.setEliminado(false);
+    pedido.setCreatedAt(LocalDateTime.now());
+    pedido.setTotal(1234.5);
+    catalogoService.addPedido(pedido);
+
+    Scanner scanner = new Scanner("3\n2\n1\n0\n0\n");
+    Main main = new Main(scanner, catalogoService);
+    ejecutar(main);
+
+    String output = outContent.toString();
+    assertTrue(output.contains("Pedidos por usuario"));
+    assertTrue(output.contains("Pedidos activos del usuario"));
+    assertTrue(output.contains("21"));
+    assertTrue(output.contains("2026-06-20"));
+    assertTrue(output.contains("CONFIRMADO"));
+    assertTrue(output.contains("TRANSFERENCIA"));
+    assertTrue(output.contains("1234.5"));
+  }
+
+  @Test
+  void testPedidosPorUsuarioSinPedidos() {
+    FakeCatalogoService catalogoService =
+        new FakeCatalogoService(List.of(crearUsuario(1L, "Ana", "ana@example.com", false)), List.of());
+
+    Scanner scanner = new Scanner("3\n2\n1\n0\n0\n");
+    Main main = new Main(scanner, catalogoService);
+    ejecutar(main);
+
+    String output = outContent.toString();
+    assertTrue(output.contains("No hay pedidos activos para el usuario seleccionado"));
   }
 
   // ===== USUARIO TESTS =====

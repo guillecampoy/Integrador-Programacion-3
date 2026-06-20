@@ -2,7 +2,7 @@
 
 Backend de consola para el TPI de Programacion III con Java, Gradle, JPA/Hibernate y H2 en archivo.
 
-Esta rama documenta una evolucion sobre la entrega previa: el proyecto ya consolida el nucleo de catalogo y persistencia, mantiene el modelo de dominio alineado con el UML de `docs/diagrama.puml` y suma la busqueda de usuarios por mail, el alta de pedidos, el cambio de estado de pedidos y la baja logica de pedidos desde la consola.
+Esta rama documenta una evolucion sobre la entrega previa: el proyecto ya consolida el nucleo de catalogo y persistencia, mantiene el modelo de dominio alineado con el UML de `docs/diagrama.puml` y suma la busqueda de usuarios por mail, el alta de pedidos, el cambio de estado de pedidos, la baja logica de pedidos y la consulta de pedidos por usuario desde la consola.
 
 ## Estado actual
 
@@ -23,6 +23,7 @@ Lo que hoy expone la aplicacion desde consola es:
 13. Alta de pedidos con detalles.
 14. Cambio de estado de pedidos.
 15. Baja logica de pedidos.
+16. Consulta de pedidos activos por usuario.
 
 El dominio ya incluye `Usuario`, `Pedido` y `DetallePedido` para sostener la evolucion del modelo, la semilla y los tests de relacion, y ahora esas entidades tambien forman parte del menu operativo.
 
@@ -228,6 +229,14 @@ HU-18 queda implementada en la baja logica de pedidos:
 3. La baja es logica y conserva el historial, los detalles y el stock.
 4. La confirmacion muestra ID y total del pedido dado de baja.
 
+HU-19 queda implementada en la consulta de pedidos por usuario:
+
+1. La consola usa la opcion de reportes del menu principal.
+2. La consulta lista usuarios activos y exige seleccionar uno valido.
+3. La busqueda delega en `PedidoRepository.buscarPorUsuario(Long)`.
+4. El reporte muestra ID, fecha, estado, forma de pago y total.
+5. Si no hay pedidos activos para ese usuario, se informa explicitamente.
+
 ## Capa de servicio
 
 `CatalogoService` concentra la logica de negocio que usa la consola:
@@ -243,6 +252,7 @@ HU-18 queda implementada en la baja logica de pedidos:
 9. Registrar pedidos con detalles y descuento atomico de stock.
 10. Cambiar el estado de pedidos activos.
 11. Dar de baja pedidos sin restaurar stock.
+12. Consultar pedidos activos por usuario con JPQL.
 
 La consola delega en esta capa para evitar mezclar input de usuario con reglas de negocio.
 
@@ -287,6 +297,7 @@ Submenu de reportes:
 
 ```text
 1. Productos por categoria
+2. Pedidos por usuario
 0. Volver
 ```
 
@@ -344,7 +355,7 @@ La base del proyecto ya pasa la suite de tests:
 
 La validacion cubre el contrato de HU-01 y el alta de pedidos con pruebas sobre guardado nuevo, guardado con id existente, busqueda, listado activo, borrado logico, transaccion atómica, descuento de stock y rollback.
 
-Tambien cubre HU-17 y HU-18 con pruebas de cambio de estado, baja logica y rechazo de pedidos eliminados.
+Tambien cubre HU-17, HU-18 y HU-19 con pruebas de cambio de estado, baja logica, reporte por usuario y rechazo de pedidos eliminados.
 
 Y la aplicacion puede ejecutarse desde consola con:
 
