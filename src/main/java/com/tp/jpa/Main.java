@@ -144,10 +144,12 @@ public class Main {
     boolean volver = false;
     while (!volver) {
       mostrarMenuUsuarios();
-      String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2"));
+      String opcion =
+          entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2", "3"));
       switch (opcion) {
         case "1" -> altaUsuario();
         case "2" -> modificarUsuario();
+        case "3" -> bajaUsuario();
         case "0" -> volver = true;
         default -> imprimirError("Opcion invalida.");
       }
@@ -520,6 +522,35 @@ public class Main {
     }
   }
 
+  private void bajaUsuario() {
+    imprimirTitulo("Baja logica de usuario");
+    List<Usuario> usuarios = catalogoService.listarUsuariosActivos();
+    if (usuarios.isEmpty()) {
+      imprimirMensaje("No hay usuarios activos para dar de baja.");
+      return;
+    }
+
+    imprimirUsuarios(usuarios);
+    Set<Long> idsValidos =
+        usuarios.stream().map(Usuario::getId).collect(java.util.stream.Collectors.toSet());
+    long id =
+        entrada.leerLong(
+            prompt("Ingrese ID de usuario"),
+            idsValidos::contains,
+            "Error: no existe un usuario activo con el ID indicado.");
+
+    try {
+      Usuario dadoDeBaja = catalogoService.bajaUsuario(id);
+      imprimirMensaje(
+          "Usuario dado de baja correctamente: "
+              + dadoDeBaja.getNombre()
+              + " "
+              + dadoDeBaja.getApellido());
+    } catch (RuntimeException exception) {
+      imprimirError(exception.getMessage());
+    }
+  }
+
   private void modificarCategoria() {
     imprimirTitulo("Modificar categoria");
     List<Categoria> categorias = catalogoService.listarCategoriasActivas();
@@ -759,6 +790,7 @@ public class Main {
     System.out.println(SEPARADOR);
     imprimirOpcion("1", "Alta de usuario");
     imprimirOpcion("2", "Modificar usuario");
+    imprimirOpcion("3", "Baja logica de usuario");
     imprimirOpcion("0", "Volver");
     System.out.println(SEPARADOR);
   }

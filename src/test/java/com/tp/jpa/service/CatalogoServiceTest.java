@@ -587,6 +587,39 @@ class CatalogoServiceTest {
     assertEquals(0, usuarioRepository.guardarLlamadas);
   }
 
+  @Test
+  void bajaUsuarioMarcaEliminadoYConservaElRegistro() {
+    FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+    FakeProductoRepository productoRepository = new FakeProductoRepository();
+    FakeUsuarioRepository usuarioRepository = new FakeUsuarioRepository();
+    usuarioRepository.add(crearUsuario(1L, "Ana", "ana@example.com", false));
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
+
+    Usuario dadoDeBaja = service.bajaUsuario(1L);
+
+    assertTrue(dadoDeBaja.getEliminado());
+    assertTrue(usuarioRepository.buscarPorId(1L).orElseThrow().getEliminado());
+    assertTrue(usuarioRepository.listarActivos().isEmpty());
+    assertEquals(0, usuarioRepository.guardarLlamadas);
+  }
+
+  @Test
+  void bajaUsuarioRechazaUsuarioYaEliminado() {
+    FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+    FakeProductoRepository productoRepository = new FakeProductoRepository();
+    FakeUsuarioRepository usuarioRepository = new FakeUsuarioRepository();
+    usuarioRepository.add(crearUsuario(1L, "Ana", "ana@example.com", true));
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
+
+    IllegalArgumentException exception =
+        assertThrows(IllegalArgumentException.class, () -> service.bajaUsuario(1L));
+
+    assertEquals("Error: no existe un usuario activo con el ID indicado.", exception.getMessage());
+    assertEquals(0, usuarioRepository.guardarLlamadas);
+  }
+
   private static Categoria crearCategoria(Long id, String nombre, boolean eliminado) {
     Categoria categoria = new Categoria();
     categoria.setId(id);
@@ -771,6 +804,16 @@ class CatalogoServiceTest {
           .filter(usuario -> !Boolean.TRUE.equals(usuario.getEliminado()))
           .filter(usuario -> usuario.getMail() != null && usuario.getMail().equalsIgnoreCase(mail))
           .findFirst();
+    }
+
+    @Override
+    public Usuario cambiarEstadoEliminado(Long id, boolean eliminado) {
+      Usuario usuario = store.get(id);
+      if (usuario == null) {
+        return null;
+      }
+      usuario.setEliminado(eliminado);
+      return usuario;
     }
   }
 }

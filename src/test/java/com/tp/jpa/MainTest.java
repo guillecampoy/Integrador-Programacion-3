@@ -213,6 +213,16 @@ class MainTest {
           .filter(usuario -> usuario.getMail() != null && usuario.getMail().equalsIgnoreCase(mail))
           .findFirst();
     }
+
+    @Override
+    public Usuario cambiarEstadoEliminado(Long id, boolean eliminado) {
+      Usuario usuario = store.get(id);
+      if (usuario == null) {
+        return null;
+      }
+      usuario.setEliminado(eliminado);
+      return usuario;
+    }
   }
 
   // ---- Helper: build a valid Categoria for testing ----
@@ -856,6 +866,23 @@ class MainTest {
     assertTrue(output.contains("No se modifico el usuario"));
     assertTrue(output.contains("ya existe un usuario activo con ese mail"));
     assertEquals("ana@example.com", userRepo.buscarPorId(1L).orElseThrow().getMail());
+  }
+
+  @Test
+  void testBajaUsuario() {
+    FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
+    FakeProductoRepository prodRepo = new FakeProductoRepository();
+    FakeUsuarioRepository userRepo = new FakeUsuarioRepository();
+    userRepo.add(crearUsuario(1L, "Ana", "ana@example.com", false));
+    Scanner scanner = new Scanner("5\n3\n1\n0\n0\n");
+    Main main = new Main(scanner, catRepo, prodRepo, userRepo);
+    ejecutar(main);
+
+    String output = outContent.toString();
+    assertTrue(output.contains("Usuario dado de baja correctamente: Ana Apellido Ana"));
+    assertTrue(userRepo.buscarPorId(1L).orElseThrow().getEliminado());
+    assertTrue(userRepo.listarActivos().isEmpty());
+    assertTrue(userRepo.buscarPorMail("ana@example.com").isEmpty());
   }
 
   // ===== ENTIDADES TEST =====

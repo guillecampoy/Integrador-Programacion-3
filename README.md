@@ -18,6 +18,7 @@ Lo que hoy expone la aplicacion desde consola es:
 8. Regeneracion de la base local con semilla inicial.
 9. Alta de usuarios.
 10. Modificacion de usuarios.
+11. Baja de usuarios.
 
 El dominio ya incluye `Usuario`, `Pedido` y `DetallePedido` para sostener la evolucion del modelo, la semilla y los tests de relacion, aunque esas entidades no forman parte del menu operativo actual.
 
@@ -183,13 +184,20 @@ HU-13 queda implementada en la modificacion de usuarios:
 3. Los campos en blanco conservan el valor previo.
 4. El mail nuevo se valida contra otros usuarios activos antes de persistir.
 
+HU-14 queda implementada en la baja de usuarios:
+
+1. La consola lista usuarios activos antes de pedir el ID.
+2. La baja es logica y conserva el registro.
+3. Se confirma mostrando nombre y apellido del usuario dado de baja.
+4. El usuario deja de aparecer en los listados activos y en la busqueda por mail.
+
 ## Capa de servicio
 
 `CatalogoService` concentra la logica de negocio que usa la consola:
 
 1. Crear y modificar categorias.
 2. Crear y modificar productos.
-3. Crear y modificar usuarios.
+3. Crear, modificar y dar de baja usuarios.
 4. Ejecutar bajas logicas.
 5. Restaurar registros eliminados.
 6. Validar ids, textos, precio, stock, rol y mail unico.
@@ -246,6 +254,7 @@ Submenu de usuarios:
 ```text
 1. Alta de usuario
 2. Modificar usuario
+3. Baja logica de usuario
 0. Volver
 ```
 

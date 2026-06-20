@@ -119,6 +119,15 @@ public class CatalogoService {
     return usuarioRepository.guardar(usuario);
   }
 
+  public Usuario bajaUsuario(Long id) {
+    validarId(id, "usuario");
+    Usuario usuario = obtenerUsuarioActivo(id);
+    if (Boolean.TRUE.equals(usuario.getEliminado())) {
+      throw new IllegalStateException("Error: el usuario ya se encuentra dado de baja.");
+    }
+    return usuarioRepository.cambiarEstadoEliminado(id, true);
+  }
+
   public Categoria crearCategoria(String nombre, String descripcion) {
     String nombreNormalizado = requerirTexto(nombre, "El nombre de la categoria");
     String descripcionNormalizada = descripcion == null ? "" : descripcion.trim();
