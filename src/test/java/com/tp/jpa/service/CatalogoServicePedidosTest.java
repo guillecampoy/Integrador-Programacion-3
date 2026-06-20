@@ -233,6 +233,64 @@ class CatalogoServicePedidosTest {
   }
 
   @Test
+  void totalFacturadoTerminadosSumaSoloTerminadosActivosYTrataNullComoCero() {
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
+    Usuario usuario = usuarioRepository.guardar(crearUsuario("ana@example.com"));
+
+    Pedido terminadoConTotal = new Pedido();
+    terminadoConTotal.setFecha(java.time.LocalDate.of(2026, 6, 20));
+    terminadoConTotal.setEstado(Estado.TERMINADO);
+    terminadoConTotal.setFormaPago(FormaPago.EFECTIVO);
+    terminadoConTotal.setTotal(12500.0);
+    terminadoConTotal.setUsuario(usuario);
+    terminadoConTotal.setEliminado(false);
+    terminadoConTotal.setCreatedAt(LocalDateTime.now());
+    pedidoRepository.guardar(terminadoConTotal);
+
+    Pedido terminadoSinTotal = new Pedido();
+    terminadoSinTotal.setFecha(java.time.LocalDate.of(2026, 6, 21));
+    terminadoSinTotal.setEstado(Estado.TERMINADO);
+    terminadoSinTotal.setFormaPago(FormaPago.TARJETA);
+    terminadoSinTotal.setTotal(0.0);
+    terminadoSinTotal.setUsuario(usuario);
+    terminadoSinTotal.setEliminado(false);
+    terminadoSinTotal.setCreatedAt(LocalDateTime.now());
+    pedidoRepository.guardar(terminadoSinTotal);
+
+    try (EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager()) {
+      em.getTransaction().begin();
+      em.createNativeQuery("update Pedido set total = null where id = ?")
+          .setParameter(1, terminadoSinTotal.getId())
+          .executeUpdate();
+      em.getTransaction().commit();
+    }
+
+    Pedido pendiente = new Pedido();
+    pendiente.setFecha(java.time.LocalDate.of(2026, 6, 22));
+    pendiente.setEstado(Estado.PENDIENTE);
+    pendiente.setFormaPago(FormaPago.TRANSFERENCIA);
+    pendiente.setTotal(9000.0);
+    pendiente.setUsuario(usuario);
+    pendiente.setEliminado(false);
+    pendiente.setCreatedAt(LocalDateTime.now());
+    pedidoRepository.guardar(pendiente);
+
+    Pedido terminadoEliminado = new Pedido();
+    terminadoEliminado.setFecha(java.time.LocalDate.of(2026, 6, 23));
+    terminadoEliminado.setEstado(Estado.TERMINADO);
+    terminadoEliminado.setFormaPago(FormaPago.EFECTIVO);
+    terminadoEliminado.setTotal(9999.0);
+    terminadoEliminado.setUsuario(usuario);
+    terminadoEliminado.setEliminado(false);
+    terminadoEliminado.setCreatedAt(LocalDateTime.now());
+    pedidoRepository.guardar(terminadoEliminado);
+    pedidoRepository.eliminarLogico(terminadoEliminado.getId());
+
+    assertEquals(12500.0, service.totalFacturadoTerminados());
+  }
+
+  @Test
   void bajaPedidoMarcaEliminadoYConservaStockYDetalles() {
     CatalogoService service =
         new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);

@@ -334,6 +334,15 @@ class MainTest {
           .sorted(Comparator.comparing(Pedido::getId))
           .toList();
     }
+
+    @Override
+    public double totalFacturadoTerminados() {
+      return pedidos.values().stream()
+          .filter(pedido -> !Boolean.TRUE.equals(pedido.getEliminado()))
+          .filter(pedido -> Objects.equals(pedido.getEstado(), Estado.TERMINADO))
+          .mapToDouble(pedido -> pedido.getTotal() == null ? 0.0 : pedido.getTotal())
+          .sum();
+    }
   }
 
   // ---- Helper: build a valid Categoria for testing ----
@@ -977,6 +986,89 @@ class MainTest {
 
     String output = outContent.toString();
     assertTrue(output.contains("No hay pedidos activos con el estado seleccionado"));
+  }
+
+  @Test
+  void testTotalFacturado() {
+    Usuario usuario = crearUsuario(1L, "Ana", "ana@example.com", false);
+    FakeCatalogoService catalogoService = new FakeCatalogoService(List.of(usuario), List.of());
+
+    Pedido terminado1 = new Pedido();
+    terminado1.setId(41L);
+    terminado1.setFecha(java.time.LocalDate.now());
+    terminado1.setEstado(Estado.TERMINADO);
+    terminado1.setFormaPago(FormaPago.EFECTIVO);
+    terminado1.setUsuario(usuario);
+    terminado1.setEliminado(false);
+    terminado1.setCreatedAt(LocalDateTime.now());
+    terminado1.setTotal(12500.0);
+    catalogoService.addPedido(terminado1);
+
+    Pedido terminado2 = new Pedido();
+    terminado2.setId(42L);
+    terminado2.setFecha(java.time.LocalDate.now());
+    terminado2.setEstado(Estado.TERMINADO);
+    terminado2.setFormaPago(FormaPago.TARJETA);
+    terminado2.setUsuario(usuario);
+    terminado2.setEliminado(false);
+    terminado2.setCreatedAt(LocalDateTime.now());
+    terminado2.setTotal(0.0);
+    catalogoService.addPedido(terminado2);
+
+    Pedido pendiente = new Pedido();
+    pendiente.setId(43L);
+    pendiente.setFecha(java.time.LocalDate.now());
+    pendiente.setEstado(Estado.PENDIENTE);
+    pendiente.setFormaPago(FormaPago.TRANSFERENCIA);
+    pendiente.setUsuario(usuario);
+    pendiente.setEliminado(false);
+    pendiente.setCreatedAt(LocalDateTime.now());
+    pendiente.setTotal(5000.0);
+    catalogoService.addPedido(pendiente);
+
+    Pedido terminadoEliminado = new Pedido();
+    terminadoEliminado.setId(44L);
+    terminadoEliminado.setFecha(java.time.LocalDate.now());
+    terminadoEliminado.setEstado(Estado.TERMINADO);
+    terminadoEliminado.setFormaPago(FormaPago.EFECTIVO);
+    terminadoEliminado.setUsuario(usuario);
+    terminadoEliminado.setEliminado(true);
+    terminadoEliminado.setCreatedAt(LocalDateTime.now());
+    terminadoEliminado.setTotal(9999.0);
+    catalogoService.addPedido(terminadoEliminado);
+
+    Scanner scanner = new Scanner("3\n4\n0\n0\n");
+    Main main = new Main(scanner, catalogoService);
+    ejecutar(main);
+
+    String output = outContent.toString();
+    assertTrue(output.contains("Total facturado"));
+    assertTrue(output.contains("$12500.00"));
+  }
+
+  @Test
+  void testTotalFacturadoSinTerminados() {
+    Usuario usuario = crearUsuario(1L, "Ana", "ana@example.com", false);
+    FakeCatalogoService catalogoService = new FakeCatalogoService(List.of(usuario), List.of());
+
+    Pedido pendiente = new Pedido();
+    pendiente.setId(51L);
+    pendiente.setFecha(java.time.LocalDate.now());
+    pendiente.setEstado(Estado.PENDIENTE);
+    pendiente.setFormaPago(FormaPago.EFECTIVO);
+    pendiente.setUsuario(usuario);
+    pendiente.setEliminado(false);
+    pendiente.setCreatedAt(LocalDateTime.now());
+    pendiente.setTotal(123.45);
+    catalogoService.addPedido(pendiente);
+
+    Scanner scanner = new Scanner("3\n4\n0\n0\n");
+    Main main = new Main(scanner, catalogoService);
+    ejecutar(main);
+
+    String output = outContent.toString();
+    assertTrue(output.contains("Total facturado"));
+    assertTrue(output.contains("$0.00"));
   }
 
   // ===== USUARIO TESTS =====

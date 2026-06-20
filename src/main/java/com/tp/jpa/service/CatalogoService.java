@@ -178,6 +178,12 @@ public class CatalogoService {
     return pedidoRepository.buscarPorEstado(estado);
   }
 
+  public double totalFacturadoTerminados() {
+    return pedidoRepository.buscarPorEstado(Estado.TERMINADO).stream()
+        .mapToDouble(pedido -> pedido.getTotal() == null ? 0.0 : pedido.getTotal())
+        .sum();
+  }
+
   public Pedido bajaPedido(Long id) {
     validarId(id, "pedido");
     Pedido pedido = obtenerPedidoActivo(id);

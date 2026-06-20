@@ -2,7 +2,7 @@
 
 Backend de consola para el TPI de Programacion III con Java, Gradle, JPA/Hibernate y H2 en archivo.
 
-Esta rama documenta una evolucion sobre la entrega previa: el proyecto ya consolida el nucleo de catalogo y persistencia, mantiene el modelo de dominio alineado con el UML de `docs/diagrama.puml` y suma la busqueda de usuarios por mail, el alta de pedidos, el cambio de estado de pedidos, la baja logica de pedidos y las consultas de pedidos por usuario y por estado desde la consola.
+Esta rama documenta una evolucion sobre la entrega previa: el proyecto ya consolida el nucleo de catalogo y persistencia, mantiene el modelo de dominio alineado con el UML de `docs/diagrama.puml` y suma la busqueda de usuarios por mail, el alta de pedidos, el cambio de estado de pedidos, la baja logica de pedidos y las consultas de pedidos por usuario, por estado y del total facturado desde la consola.
 
 ## Estado actual
 
@@ -25,6 +25,7 @@ Lo que hoy expone la aplicacion desde consola es:
 15. Baja logica de pedidos.
 16. Consulta de pedidos activos por usuario.
 17. Consulta de pedidos activos por estado.
+18. Reporte de total facturado.
 
 El dominio ya incluye `Usuario`, `Pedido` y `DetallePedido` para sostener la evolucion del modelo, la semilla y los tests de relacion, y ahora esas entidades tambien forman parte del menu operativo.
 
@@ -246,6 +247,13 @@ HU-20 queda implementada en la consulta de pedidos por estado:
 4. El reporte muestra ID, fecha, nombre de usuario y total.
 5. Si no hay pedidos activos con ese estado, se informa explicitamente.
 
+HU-21 queda implementada en el reporte de total facturado:
+
+1. La consola usa la opcion de reportes del menu principal.
+2. El reporte toma solo pedidos activos en estado `TERMINADO`.
+3. Los totales nulos se consideran cero para no romper el calculo.
+4. La salida se formatea como moneda con dos decimales.
+
 ## Capa de servicio
 
 `CatalogoService` concentra la logica de negocio que usa la consola:
@@ -263,6 +271,7 @@ HU-20 queda implementada en la consulta de pedidos por estado:
 11. Dar de baja pedidos sin restaurar stock.
 12. Consultar pedidos activos por usuario con JPQL.
 13. Consultar pedidos activos por estado con JPQL.
+14. Reportar total facturado con pedidos terminados.
 
 La consola delega en esta capa para evitar mezclar input de usuario con reglas de negocio.
 
@@ -309,6 +318,7 @@ Submenu de reportes:
 1. Productos por categoria
 2. Pedidos por usuario
 3. Pedidos por estado
+4. Total facturado
 0. Volver
 ```
 
@@ -366,7 +376,7 @@ La base del proyecto ya pasa la suite de tests:
 
 La validacion cubre el contrato de HU-01 y el alta de pedidos con pruebas sobre guardado nuevo, guardado con id existente, busqueda, listado activo, borrado logico, transaccion atómica, descuento de stock y rollback.
 
-Tambien cubre HU-17, HU-18, HU-19 y HU-20 con pruebas de cambio de estado, baja logica, reportes por usuario y por estado, y rechazo de pedidos eliminados.
+Tambien cubre HU-17, HU-18, HU-19, HU-20 y HU-21 con pruebas de cambio de estado, baja logica, reportes por usuario, por estado y total facturado, y rechazo de pedidos eliminados.
 
 Y la aplicacion puede ejecutarse desde consola con:
 

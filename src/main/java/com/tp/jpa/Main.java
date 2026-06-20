@@ -22,6 +22,7 @@ import com.tp.jpa.seed.PersistenciaInicial;
 import com.tp.jpa.service.CatalogoService;
 import com.tp.jpa.util.EntradaValidada;
 import com.tp.jpa.util.JPAUtil;
+import java.util.Locale;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
@@ -159,11 +160,13 @@ public class Main {
     boolean volver = false;
     while (!volver) {
       mostrarMenuReportes();
-      String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2", "3"));
+      String opcion =
+          entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2", "3", "4"));
       switch (opcion) {
         case "1" -> productosPorCategoria();
         case "2" -> pedidosPorUsuario();
         case "3" -> pedidosPorEstado();
+        case "4" -> totalFacturado();
         case "0" -> volver = true;
         default -> imprimirError("Opcion invalida.");
       }
@@ -409,6 +412,12 @@ public class Main {
 
     System.out.println("Pedidos activos con estado " + estado.name() + ":");
     imprimirPedidosPorEstadoReporte(pedidos);
+  }
+
+  private void totalFacturado() {
+    imprimirTitulo("Total facturado");
+    double total = catalogoService.totalFacturadoTerminados();
+    System.out.println("Total facturado: " + String.format(Locale.US, "$%.2f", total));
   }
 
   private void modificarProducto() {
@@ -1127,6 +1136,7 @@ public class Main {
     imprimirOpcion("1", "Productos por categoria");
     imprimirOpcion("2", "Pedidos por usuario");
     imprimirOpcion("3", "Pedidos por estado");
+    imprimirOpcion("4", "Total facturado");
     imprimirOpcion("0", "Volver");
     System.out.println(SEPARADOR);
   }
