@@ -9,8 +9,10 @@ import static com.tp.jpa.util.ConsolaUtils.imprimirTitulo;
 import static com.tp.jpa.util.ConsolaUtils.prompt;
 
 import com.tp.jpa.model.Categoria;
+import com.tp.jpa.model.Pedido;
 import com.tp.jpa.model.Producto;
 import com.tp.jpa.model.Usuario;
+import com.tp.jpa.model.enums.FormaPago;
 import com.tp.jpa.model.enums.Rol;
 import com.tp.jpa.repository.CategoriaRepository;
 import com.tp.jpa.repository.ProductoRepository;
@@ -108,13 +110,15 @@ public class Main {
     while (!salir) {
       mostrarMenuPrincipal();
       String opcion =
-          entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2", "3", "4", "5"));
+          entrada.leerOpcion(
+              prompt("Seleccione una opcion"), Set.of("0", "1", "2", "3", "4", "5", "6"));
       switch (opcion) {
         case "1" -> menuCategorias();
         case "2" -> menuProductos();
         case "3" -> menuReportes();
         case "4" -> regenerarDatos();
         case "5" -> menuUsuarios();
+        case "6" -> menuPedidos();
         case "0" -> salir = true;
         default -> imprimirError("Opcion invalida.");
       }
@@ -174,6 +178,19 @@ public class Main {
         case "2" -> modificarUsuario();
         case "3" -> bajaUsuario();
         case "4" -> buscarUsuarioPorMail();
+        case "0" -> volver = true;
+        default -> imprimirError("Opcion invalida.");
+      }
+    }
+  }
+
+  private void menuPedidos() {
+    boolean volver = false;
+    while (!volver) {
+      mostrarMenuPedidos();
+      String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1"));
+      switch (opcion) {
+        case "1" -> altaPedido();
         case "0" -> volver = true;
         default -> imprimirError("Opcion invalida.");
       }
@@ -575,6 +592,86 @@ public class Main {
     }
   }
 
+  private void altaPedido() {
+    imprimirTitulo("Alta de pedido");
+    List<Usuario> usuarios = catalogoService.listarUsuariosActivos();
+    if (usuarios.isEmpty()) {
+      imprimirMensaje("No hay usuarios activos para crear pedidos.");
+      return;
+    }
+
+    imprimirUsuarios(usuarios);
+    Set<Long> idsUsuarios =
+        usuarios.stream().map(Usuario::getId).collect(java.util.stream.Collectors.toSet());
+    long usuarioId =
+        entrada.leerLong(
+            prompt("Ingrese ID de usuario"),
+            idsUsuarios::contains,
+            "Error: no existe un usuario activo con el ID indicado.");
+
+    List<Producto> productos = catalogoService.listarProductosDisponiblesParaPedido();
+    if (productos.isEmpty()) {
+      imprimirMensaje("No hay productos disponibles para crear pedidos.");
+      return;
+    }
+
+    imprimirProductosParaPedido(productos);
+    Set<Long> idsProductos =
+        productos.stream().map(Producto::getId).collect(java.util.stream.Collectors.toSet());
+
+    System.out.println("Forma de pago");
+    imprimirOpcion("1", "TARJETA");
+    imprimirOpcion("2", "TRANSFERENCIA");
+    imprimirOpcion("3", "EFECTIVO");
+    FormaPago formaPago =
+        switch (entrada.leerOpcion(prompt("Seleccione forma de pago"), Set.of("1", "2", "3"))) {
+          case "1" -> FormaPago.TARJETA;
+          case "2" -> FormaPago.TRANSFERENCIA;
+          default -> FormaPago.EFECTIVO;
+        };
+
+    List<CatalogoService.LineaPedidoSolicitud> lineas = new java.util.ArrayList<>();
+    boolean seguir = true;
+    while (seguir) {
+      long productoId =
+          entrada.leerLong(
+              prompt("Ingrese ID de producto (0 para finalizar)"),
+              valor -> valor >= 0,
+              "Error: ingrese un ID numerico mayor o igual a 0.");
+      if (productoId == 0) {
+        seguir = false;
+        continue;
+      }
+      if (!idsProductos.contains(productoId)) {
+        imprimirError("Error: no existe un producto disponible con el ID indicado.");
+        continue;
+      }
+      int cantidad = entrada.leerEntero(prompt("Cantidad"), 1);
+      lineas.add(new CatalogoService.LineaPedidoSolicitud(productoId, cantidad));
+    }
+
+    if (lineas.isEmpty()) {
+      imprimirError("Error: el pedido debe tener al menos un detalle.");
+      return;
+    }
+
+    try {
+      Pedido pedido = catalogoService.crearPedido(usuarioId, formaPago, lineas);
+      imprimirMensaje(
+          "Pedido creado correctamente. ID generado: "
+              + pedido.getId()
+              + " | Total: "
+              + pedido.getTotal()
+              + " | Usuario: "
+              + pedido.getUsuario().getNombre()
+              + " "
+              + pedido.getUsuario().getApellido());
+      imprimirDetallePedido(pedido);
+    } catch (RuntimeException exception) {
+      imprimirError("No se pudo crear el pedido: " + exception.getMessage());
+    }
+  }
+
   private void buscarUsuarioPorMail() {
     imprimirTitulo("Buscar usuario por mail");
     String mail = entrada.leerTextoNoVacio(prompt("Mail"));
@@ -730,6 +827,21 @@ public class Main {
             .toList());
   }
 
+  private void imprimirProductosParaPedido(List<Producto> productos) {
+    imprimirTabla(
+        new String[] {"ID", "Nombre", "Precio", "Stock"},
+        productos.stream()
+            .map(
+                producto ->
+                    new String[] {
+                      producto.getId().toString(),
+                      producto.getNombre(),
+                      producto.getPrecio().toString(),
+                      String.valueOf(producto.getStock())
+                    })
+            .toList());
+  }
+
   private void imprimirUsuarios(List<Usuario> usuarios) {
     imprimirTabla(
         new String[] {"ID", "Nombre", "Apellido", "Mail", "Celular", "Rol"},
@@ -743,6 +855,24 @@ public class Main {
                       usuario.getMail(),
                       usuario.getCelular(),
                       usuario.getRol() == null ? "" : usuario.getRol().name()
+                    })
+            .toList());
+  }
+
+  private void imprimirDetallePedido(Pedido pedido) {
+    System.out.println("Detalle del pedido:");
+    imprimirTabla(
+        new String[] {"Producto", "Cantidad", "Subtotal"},
+        pedido.getDetallePedidos().stream()
+            .sorted(
+                java.util.Comparator.comparing(
+                    detalle -> detalle.getProducto().getId()))
+            .map(
+                detalle ->
+                    new String[] {
+                      detalle.getProducto().getNombre(),
+                      String.valueOf(detalle.getCantidad()),
+                      detalle.getSubtotal().toString()
                     })
             .toList());
   }
@@ -778,6 +908,7 @@ public class Main {
     imprimirOpcion("3", "Reportes");
     imprimirOpcion("4", "Regenerar datos");
     imprimirOpcion("5", "Usuarios");
+    imprimirOpcion("6", "Pedidos");
     imprimirOpcion("0", "Salir");
     System.out.println(SEPARADOR);
   }
@@ -829,6 +960,16 @@ public class Main {
     imprimirOpcion("2", "Modificar usuario");
     imprimirOpcion("3", "Baja logica de usuario");
     imprimirOpcion("4", "Buscar usuario por mail");
+    imprimirOpcion("0", "Volver");
+    System.out.println(SEPARADOR);
+  }
+
+  private void mostrarMenuPedidos() {
+    System.out.println();
+    System.out.println(SEPARADOR);
+    System.out.println("Pedidos");
+    System.out.println(SEPARADOR);
+    imprimirOpcion("1", "Alta de pedido");
     imprimirOpcion("0", "Volver");
     System.out.println(SEPARADOR);
   }

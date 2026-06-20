@@ -1,12 +1,18 @@
 package com.tp.jpa.service;
 
 import com.tp.jpa.model.Categoria;
+import com.tp.jpa.model.Pedido;
 import com.tp.jpa.model.Producto;
 import com.tp.jpa.model.Usuario;
+import com.tp.jpa.model.enums.Estado;
+import com.tp.jpa.model.enums.FormaPago;
 import com.tp.jpa.model.enums.Rol;
 import com.tp.jpa.repository.CategoriaRepository;
 import com.tp.jpa.repository.ProductoRepository;
 import com.tp.jpa.repository.UsuarioRepository;
+import com.tp.jpa.util.JPAUtil;
+import jakarta.persistence.EntityManager;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +23,8 @@ public class CatalogoService {
   private final UsuarioRepository usuarioRepository;
 
   public record BajaCategoriaResultado(Categoria categoria, List<Producto> productosDadosDeBaja) {}
+
+  public record LineaPedidoSolicitud(Long productoId, int cantidad) {}
 
   public CatalogoService(
       CategoriaRepository categoriaRepository, ProductoRepository productoRepository) {
@@ -44,12 +52,86 @@ public class CatalogoService {
     return productoRepository.listarActivos();
   }
 
+  public List<Producto> listarProductosDisponiblesParaPedido() {
+    return productoRepository.listarActivos().stream()
+        .filter(producto -> Boolean.TRUE.equals(producto.getDisponible()))
+        .filter(producto -> producto.getStock() > 0)
+        .sorted((producto1, producto2) -> Long.compare(producto1.getId(), producto2.getId()))
+        .toList();
+  }
+
   public List<Producto> listarProductosEliminados() {
     return productoRepository.listarEliminados();
   }
 
   public List<Usuario> listarUsuariosActivos() {
     return usuarioRepository.listarActivos();
+  }
+
+  public Pedido crearPedido(
+      Long usuarioId, FormaPago formaPago, List<LineaPedidoSolicitud> lineasPedido) {
+    validarId(usuarioId, "usuario");
+    validarFormaPago(formaPago);
+    if (lineasPedido == null || lineasPedido.isEmpty()) {
+      throw new IllegalArgumentException("Error: el pedido debe tener al menos un detalle.");
+    }
+
+    EntityManager entityManager = JPAUtil.getEntityManagerFactory().createEntityManager();
+    try {
+      entityManager.getTransaction().begin();
+
+      Usuario usuario =
+          entityManager.find(Usuario.class, usuarioId);
+      if (usuario == null || Boolean.TRUE.equals(usuario.getEliminado())) {
+        throw new IllegalArgumentException("Error: no existe un usuario activo con el ID indicado.");
+      }
+
+      Pedido pedido = new Pedido();
+      pedido.setFecha(LocalDate.now());
+      pedido.setEstado(Estado.PENDIENTE);
+      pedido.setFormaPago(formaPago);
+      pedido.setUsuario(usuario);
+      pedido.setTotal(0.0);
+      pedido.setCreatedAt(LocalDateTime.now());
+
+      for (LineaPedidoSolicitud lineaPedido : lineasPedido) {
+        if (lineaPedido == null) {
+          throw new IllegalArgumentException("Error: el pedido debe tener al menos un detalle.");
+        }
+        validarId(lineaPedido.productoId(), "producto");
+        if (lineaPedido.cantidad() < 1) {
+          throw new IllegalArgumentException("Error: la cantidad debe ser mayor o igual a 1.");
+        }
+
+        Producto producto = entityManager.find(Producto.class, lineaPedido.productoId());
+        if (producto == null || Boolean.TRUE.equals(producto.getEliminado())) {
+          throw new IllegalArgumentException("Error: no existe un producto activo con el ID indicado.");
+        }
+        if (!Boolean.TRUE.equals(producto.getDisponible())) {
+          throw new IllegalStateException(
+              "Error: el producto no se encuentra disponible para pedidos.");
+        }
+        if (producto.getStock() < lineaPedido.cantidad()) {
+          throw new IllegalStateException(
+              "Error: stock insuficiente para el producto " + producto.getNombre() + ".");
+        }
+
+        producto.setStock(producto.getStock() - lineaPedido.cantidad());
+        pedido.addDetallePedido(lineaPedido.cantidad(), producto);
+      }
+
+      pedido.calcularTotal();
+      entityManager.persist(pedido);
+      entityManager.getTransaction().commit();
+      return pedido;
+    } catch (RuntimeException exception) {
+      if (entityManager.getTransaction().isActive()) {
+        entityManager.getTransaction().rollback();
+      }
+      throw exception;
+    } finally {
+      entityManager.close();
+    }
   }
 
   public Usuario obtenerUsuarioActivo(Long id) {
@@ -357,6 +439,12 @@ public class CatalogoService {
   private void validarRol(Rol rol) {
     if (rol == null) {
       throw new IllegalArgumentException("Error: el rol del usuario es obligatorio.");
+    }
+  }
+
+  private void validarFormaPago(FormaPago formaPago) {
+    if (formaPago == null) {
+      throw new IllegalArgumentException("Error: la forma de pago es obligatoria.");
     }
   }
 

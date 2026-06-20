@@ -3,8 +3,11 @@ package com.tp.jpa;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.tp.jpa.model.Categoria;
+import com.tp.jpa.model.Pedido;
 import com.tp.jpa.model.Producto;
 import com.tp.jpa.model.Usuario;
+import com.tp.jpa.model.enums.Estado;
+import com.tp.jpa.model.enums.FormaPago;
 import com.tp.jpa.model.enums.Rol;
 import com.tp.jpa.repository.CategoriaRepository;
 import com.tp.jpa.repository.ProductoRepository;
@@ -222,6 +225,56 @@ class MainTest {
       }
       usuario.setEliminado(eliminado);
       return usuario;
+    }
+  }
+
+  static class FakeCatalogoService extends CatalogoService {
+    private final List<Usuario> usuariosActivos;
+    private final List<Producto> productosDisponibles;
+    private Pedido ultimoPedido;
+
+    FakeCatalogoService(List<Usuario> usuariosActivos, List<Producto> productosDisponibles) {
+      super(new FakeCategoriaRepository(), new FakeProductoRepository(), new FakeUsuarioRepository());
+      this.usuariosActivos = usuariosActivos;
+      this.productosDisponibles = productosDisponibles;
+    }
+
+    @Override
+    public List<Usuario> listarUsuariosActivos() {
+      return usuariosActivos;
+    }
+
+    @Override
+    public List<Producto> listarProductosDisponiblesParaPedido() {
+      return productosDisponibles;
+    }
+
+    @Override
+    public Pedido crearPedido(
+        Long usuarioId, FormaPago formaPago, List<LineaPedidoSolicitud> lineasPedido) {
+      Usuario usuario =
+          usuariosActivos.stream()
+              .filter(usuario1 -> Objects.equals(usuario1.getId(), usuarioId))
+              .findFirst()
+              .orElseThrow();
+      Pedido pedido = new Pedido();
+      pedido.setId(10L);
+      pedido.setFecha(java.time.LocalDate.now());
+      pedido.setEstado(Estado.PENDIENTE);
+      pedido.setFormaPago(formaPago);
+      pedido.setUsuario(usuario);
+      pedido.setEliminado(false);
+      pedido.setCreatedAt(LocalDateTime.now());
+      for (LineaPedidoSolicitud lineaPedido : lineasPedido) {
+        Producto producto =
+            productosDisponibles.stream()
+                .filter(producto1 -> Objects.equals(producto1.getId(), lineaPedido.productoId()))
+                .findFirst()
+                .orElseThrow();
+        pedido.addDetallePedido(lineaPedido.cantidad(), producto);
+      }
+      ultimoPedido = pedido;
+      return pedido;
     }
   }
 
@@ -883,6 +936,23 @@ class MainTest {
     assertTrue(userRepo.buscarPorId(1L).orElseThrow().getEliminado());
     assertTrue(userRepo.listarActivos().isEmpty());
     assertTrue(userRepo.buscarPorMail("ana@example.com").isEmpty());
+  }
+
+  @Test
+  void testAltaPedidoDesdeMenuPrincipal() {
+    Usuario usuario = crearUsuario(1L, "Ana", "ana@example.com", false);
+    Producto producto = crearProducto(1L, "Cafe", 12.0, 5, crearCategoria(1, "Bebidas"));
+    FakeCatalogoService catalogoService =
+        new FakeCatalogoService(List.of(usuario), List.of(producto));
+    Scanner scanner = new Scanner("6\n1\n1\n3\n1\n2\n0\n0\n0\n");
+    Main main = new Main(scanner, catalogoService);
+    ejecutar(main);
+
+    String output = outContent.toString();
+    assertTrue(output.contains("Alta de pedido"));
+    assertTrue(output.contains("Pedido creado correctamente"));
+    assertTrue(output.contains("Detalle del pedido"));
+    assertTrue(output.contains("Cafe"));
   }
 
   @Test

@@ -2,7 +2,7 @@
 
 Backend de consola para el TPI de Programacion III con Java, Gradle, JPA/Hibernate y H2 en archivo.
 
-Esta rama documenta una evolucion sobre la entrega previa: el proyecto ya consolida el nucleo de catalogo y persistencia, mantiene el modelo de dominio alineado con el UML de `docs/diagrama.puml` y suma la busqueda de usuarios por mail desde la consola.
+Esta rama documenta una evolucion sobre la entrega previa: el proyecto ya consolida el nucleo de catalogo y persistencia, mantiene el modelo de dominio alineado con el UML de `docs/diagrama.puml` y suma la busqueda de usuarios por mail y el alta de pedidos desde la consola.
 
 ## Estado actual
 
@@ -20,8 +20,9 @@ Lo que hoy expone la aplicacion desde consola es:
 10. Modificacion de usuarios.
 11. Baja de usuarios.
 12. Busqueda de usuarios por mail.
+13. Alta de pedidos con detalles.
 
-El dominio ya incluye `Usuario`, `Pedido` y `DetallePedido` para sostener la evolucion del modelo, la semilla y los tests de relacion, aunque esas entidades no forman parte del menu operativo actual.
+El dominio ya incluye `Usuario`, `Pedido` y `DetallePedido` para sostener la evolucion del modelo, la semilla y los tests de relacion, y ahora esas entidades tambien forman parte del menu operativo.
 
 ## Documentacion del proyecto
 
@@ -73,6 +74,7 @@ src/test/java/com/tp/jpa/
   repository/ProductoRepositoryTest.java
   seed/PersistenciaInicialTest.java
   service/CatalogoServiceTest.java
+  service/CatalogoServicePedidosTest.java
   util/EntradaValidadaTest.java
 ```
 
@@ -200,6 +202,15 @@ HU-15 queda implementada en la busqueda de usuarios por mail:
 4. Si el usuario existe, se muestran sus datos sin exponer la contrasenia.
 5. Si no existe, se informa que no hay un usuario activo con ese mail.
 
+HU-16 queda implementada en el alta de pedidos con detalles:
+
+1. La consola usa la opcion de pedidos del menu principal.
+2. El alta lista usuarios activos y productos disponibles antes de pedir selecciones.
+3. La operacion solicita forma de pago, productos y cantidades, y exige al menos un detalle.
+4. El pedido se registra en una transaccion unica, con estado `PENDIENTE` y fecha actual.
+5. El stock de los productos se descuenta al confirmar el pedido.
+6. La confirmacion muestra ID, total, usuario y el resumen de detalles.
+
 ## Capa de servicio
 
 `CatalogoService` concentra la logica de negocio que usa la consola:
@@ -212,6 +223,7 @@ HU-15 queda implementada en la busqueda de usuarios por mail:
 6. Validar ids, textos, precio, stock, rol y mail unico.
 7. Resolver el impacto de eliminar una categoria sobre sus productos activos.
 8. Buscar productos activos por categoria.
+9. Registrar pedidos con detalles y descuento atomico de stock.
 
 La consola delega en esta capa para evitar mezclar input de usuario con reglas de negocio.
 
@@ -226,6 +238,7 @@ Sistema JPA - Categorias y Productos
 3. Reportes
 4. Regenerar datos
 5. Usuarios
+6. Pedidos
 0. Salir
 ```
 
@@ -268,6 +281,13 @@ Submenu de usuarios:
 0. Volver
 ```
 
+Submenu de pedidos:
+
+```text
+1. Alta de pedido
+0. Volver
+```
+
 ## Persistencia
 
 La unidad de persistencia es `miUnidad`, definida en `src/main/resources/META-INF/persistence.xml`.
@@ -301,7 +321,7 @@ La base del proyecto ya pasa la suite de tests:
 ./gradlew test
 ```
 
-La validacion cubre el contrato de HU-01 con pruebas sobre guardado nuevo, guardado con id existente, busqueda, listado activo y borrado logico.
+La validacion cubre el contrato de HU-01 y el alta de pedidos con pruebas sobre guardado nuevo, guardado con id existente, busqueda, listado activo, borrado logico, transaccion atómica, descuento de stock y rollback.
 
 Y la aplicacion puede ejecutarse desde consola con:
 
