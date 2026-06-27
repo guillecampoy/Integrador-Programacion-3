@@ -104,8 +104,8 @@ HU-01 queda implementada en `BaseRepository<T>`, que resuelve la infraestructura
 1. Guardado con transaccion propia.
 2. Busqueda por id.
 3. Listado de activos.
-4. Borrado logico con `eliminarLogico()`.
-5. Compatibilidad con `cambiarEstadoEliminado()` para el resto del proyecto.
+4. Borrado logico con `eliminarLogico()`, mantenido como la firma pedida por la rubrica y delegando en `cambiarEstadoEliminado(id, true)`.
+5. Compatibilidad con `cambiarEstadoEliminado()` para el resto del proyecto, centralizando ahi la logica real aunque este paso podria unificarse mas adelante.
 6. Obtencion del siguiente id logico cuando hace falta para pruebas o utilidades.
 
 HU-02 queda implementada en los repositorios concretos:

@@ -63,27 +63,27 @@ public abstract class BaseRepository<T> {
   }
 
   /**
-   * Se utiliza un único método para hacer el borrado lógico y revertir el mismo Como no se cuenta
-   * con lógica especifica para las especializaciones concretas En Categoría y Producto, se deja en
+   * Se utiliza un único método para hacer el borrado lógico y revertir el mismo. Como no se cuenta
+   * con lógica especifica para las especializaciones concretas en Categoría y Producto, se deja en
    * esta clase.
    *
    * @param id se corresponde con el ID de la entidad que se desea modificar estado
    * @param eliminado modificador que indica si se borra o restaura
    * @return
    */
-  public boolean eliminarLogico(Long id) {
+  public T cambiarEstadoEliminado(Long id, boolean eliminado) {
     EntityManager entityManager = crearEntityManager();
     try {
       entityManager.getTransaction().begin();
       T entity = entityManager.find(entityClass, id);
       if (entity == null) {
         entityManager.getTransaction().commit();
-        return false;
+        return null;
       }
-      marcarEliminado(entity, true);
+      marcarEliminado(entity, eliminado);
       entityManager.merge(entity);
       entityManager.getTransaction().commit();
-      return true;
+      return buscarPorId(id).orElse(null);
     } catch (RuntimeException exception) {
       if (entityManager.getTransaction().isActive()) {
         entityManager.getTransaction().rollback();
@@ -94,13 +94,11 @@ public abstract class BaseRepository<T> {
     }
   }
 
-  public T cambiarEstadoEliminado(Long id, boolean eliminado) {
-    if (eliminado) {
-      eliminarLogico(id);
-    } else {
-      restaurarLogico(id);
-    }
-    return buscarPorId(id).orElse(null);
+  public boolean eliminarLogico(Long id) {
+    // Corrección aplicada por feedback de la entrega anterior: esta firma queda como el wrapper
+    // exigido por la rúbrica y delega en cambiarEstadoEliminado(id, true). Podría unificarse más,
+    // pero se mantiene así para respetar exactamente lo solicitado.
+    return cambiarEstadoEliminado(id, true) != null;
   }
 
   public long siguienteId() {
@@ -125,29 +123,6 @@ public abstract class BaseRepository<T> {
       throw new IllegalArgumentException("La entidad no hereda de Base: " + entityClass.getName());
     }
     return base.getId() != null;
-  }
-
-  private boolean restaurarLogico(Long id) {
-    EntityManager entityManager = crearEntityManager();
-    try {
-      entityManager.getTransaction().begin();
-      T entity = entityManager.find(entityClass, id);
-      if (entity == null) {
-        entityManager.getTransaction().commit();
-        return false;
-      }
-      marcarEliminado(entity, false);
-      entityManager.merge(entity);
-      entityManager.getTransaction().commit();
-      return true;
-    } catch (RuntimeException exception) {
-      if (entityManager.getTransaction().isActive()) {
-        entityManager.getTransaction().rollback();
-      }
-      throw exception;
-    } finally {
-      entityManager.close();
-    }
   }
 
   private EntityManager crearEntityManager() {
