@@ -4,13 +4,6 @@ Backend de consola para el TPI de Programacion III con Java, Gradle, JPA/Hiberna
 
 La referencia de entrega para este proyecto es `docs/TPI.pdf`, contrastada con `docs/diagrama.puml` para preservar las relaciones del dominio. En este repo se implementa el backend evaluable y, aparte, se conservan algunas utilidades de prueba y recuperacion que no cambian la consigna principal.
 
-## Fuente de verdad y criterio de alcance
-
-1. `docs/TPI.pdf` define las historias, las firmas esperadas y la rubricacion del backend.
-2. `docs/diagrama.puml` se toma como contrato fijo de relaciones entre entidades.
-3. Cuando el PDF y una utilidad local no coinciden, la entrega prioriza el PDF.
-4. Las extensiones locales se mantienen separadas para no contaminar lo evaluable.
-
 ## Requerido por la rubrica
 
 ### Dominio
@@ -61,16 +54,9 @@ El menu las muestra separadas del bloque requerido, con una subtitulo propio, pa
 
 1. La busqueda de usuario por mail se dejo exacta porque eso es lo que pide la rubrica; la coincidencia parcial quedo solo como posible ampliacion futura.
 2. El menu principal se reordeno para que la ruta evaluable quede primero y las utilidades de prueba queden al final.
-3. El listado de productos agrega `disponible` porque el PDF lo pide; el reporte por categoria no arrastra columnas extra.
+3. El listado de productos agrega `disponible`; el reporte por categoria no arrastra columnas extra.
 4. Las opciones de restauracion y regeneracion se conservaron porque facilitan las pruebas manuales, pero no reemplazan el recorrido principal de la entrega.
 5. `docs/TPI.pdf` si explicita el origen del calculo: `Total facturado` toma `pedidoRepo.buscarPorEstado(Estado.TERMINADO)` y suma sus totales, filtrando `eliminado = false`.
-
-## Estado actual
-
-1. El repositorio ya cubre las historias de backend del PDF.
-2. Los tests automaticos cubren repositorios, servicios, modelo, utilidades y flujo de consola.
-3. El orden del menu principal y los reportes se alinean con la rubrica.
-4. Las utilidades adicionales quedan documentadas aparte.
 
 ## Estructura actual
 
